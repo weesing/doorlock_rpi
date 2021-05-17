@@ -1,0 +1,33 @@
+{
+  "name": "raspberry-node-bleslave",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www"
+  },
+  "dependencies": {
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "esm": "^3.2.25",
+    "express": "~4.16.1",
+    "http-errors": "~1.6.3",
+    "jade": "~1.11.0",
+    "lodash": "^4.17.21",
+    "morgan": "~1.9.1",
+    "noble": "^1.9.1"
+  },
+  "description": "Install the prerequisites ========================= `sudo apt-get install bluetooth bluez libbluetooth-dev libudev-dev`",
+  "main": "index.js",
+  "module": "main.js",
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/weesing/raspberry-node-bleslave.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/weesing/raspberry-node-bleslave/issues"
+  },
+  "homepage": "https://github.com/weesing/raspberry-node-bleslave#readme"
+}
