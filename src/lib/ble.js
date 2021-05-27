@@ -96,6 +96,8 @@ export class BLELib {
       lockCharacteristic.write(data);
     } else if (peripheral.id === this.lockMAC) {
       logger.info(`Data received from door lock.`);
+    } else if (peripheral.id === this.testMAC) {
+      logger.info(data.toString());
     }
   }
 
@@ -182,13 +184,17 @@ export class BLELib {
   async initPeripheral(peripheral) {
     const inst = this;
     logger.info('Peripheral initializing.');
+
+    const onPeripheralConnect = this.onPeripheralConnect.bind(this);
     peripheral.once('connect', function () {
-      inst.onPeripheralConnect(peripheral);
+      onPeripheralConnect(peripheral);
     });
 
+    const onPeripheralDisconnect = this.onPeripheralDisconnect.bind(this);
     peripheral.once('disconnect', function () {
-      inst.onPeripheralDisconnect(peripheral);
+      onPeripheralDisconnect(peripheral);
     });
+
     logger.info('Peripheral initialized.');
   }
 
