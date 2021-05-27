@@ -1,5 +1,6 @@
 
-# Install the prerequisites
+# Steps to prepare & run
+## Install the prerequisites
 - Execute the following:
 ```
 sudo apt-get install bluetooth bluez libbluetooth-dev libudev-dev
@@ -17,17 +18,10 @@ npm install -g nodemon
 
 :warning: **IMPORTANT!!! Ensure that your version of node is not > 8**
 
-# Stop and disable the bluetooth service
-```
-sudo systemctl stop bluetooth
-sudo systemctl disable bluetooth
-```
-
-# Install the required npm libraries
+## Install the required npm libraries
 ```
 npm install
 ```
-
 
 # Run the app
 Using `nodemon`
