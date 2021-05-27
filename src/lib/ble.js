@@ -4,15 +4,13 @@ import noble from 'noble';
 import logger from './logger';
 import { SecretsLoader } from './secrets_loader';
 
-const Peripheral = noble.Peripheral;
-
-const STATE_DISCONNECTED = 0;
-const STATE_CONNECTING = 1;
-const STATE_CONNECTED = 2;
+const PERIPHERAL_STATE_DISCONNECTED = 0;
+const PERIPHERAL_STATE_CONNECTING = 1;
+const PERIPHERAL_STATE_CONNECTED = 2;
 
 const APP_STATE_INIT = 0;
 const APP_STATE_SCANNING = 1;
-const APP_STATE_CONNECTING = 2;
+const APP_STATE_INIT_NEXT_CONNECTION = 2;
 const APP_STATE_CONNECTING_DEVICE = 3;
 const APP_STATE_IDLE = 4;
 
@@ -80,11 +78,8 @@ export class BLELib {
   }
 
   async onDataReceived(peripheral, data, isNotification) {
-    logger.info(
-      `Received - ${util.inspect(data, { depth: 99, colors: true })}`
-    );
     if (peripheral.id === this.rfidMAC) {
-      logger.info(`Source of data - RFID, forwarding to door lock...`);
+      logger.info(`Data from RFID '${data.toString()}', forwarding to door lock...`);
       const lockCharacteristic = _.get(
         this.peripheralStatuses[this.lockMAC],
         'characteristics'
@@ -95,18 +90,29 @@ export class BLELib {
       }
       lockCharacteristic.write(data);
     } else if (peripheral.id === this.lockMAC) {
-      logger.info(`Data received from door lock.`);
+      logger.info(`Data received from door lock '${data.toString()}'.`);
     } else if (peripheral.id === this.testMAC) {
-      logger.info(data.toString());
+      logger.info(`Data received from test device '${data.toString()}'`);
     }
   }
 
+  onPeripheralSubscribed(peripheral) {
+    this.connectedPeripherals.add(peripheral);
+    this.peripheralStatuses[peripheral.id] = {
+      status: PERIPHERAL_STATE_CONNECTED,
+      peripheral,
+      characteristics: firstChar
+    };
+    this.nextSubscriptionTimeout = null;
+  }
+
   async discoverAndSubscribe(peripheral) {
-    const inst = this;
     logger.info(
       `Connected peripheral ${peripheral.id}. Discovering services and characteristics...`
     );
 
+    const dataReceivedCb = this.onDataReceived.bind(this);
+    const subscribeSuccessfulCb = this.onPeripheralSubscribed.bind(this);
     peripheral.discoverSomeServicesAndCharacteristics(
       ['ffe0'],
       ['ffe1'],
@@ -119,37 +125,34 @@ export class BLELib {
             {
               error,
               services: services.map((service) =>
-                _.omit(service, ['_noble', 'characteristics'])
+                _.pick(service, ['_peripheralId', 'uuid'])
               ),
               characteristics: characteristics.map((char) =>
                 _.pick(char, ['uuid', 'name', 'type', 'properties'])
               )
             },
-            { depth: 99, colors: true }
+            { depth: 10, colors: true }
           )
         );
 
-        let firstChar = characteristics[0];
+        let characteristic = characteristics[0];
         logger.info(
-          `Subscribing to characteristics ${firstChar.uuid} on peripheral ${peripheral.id}`
+          `Subscribing to characteristics ${characteristic.uuid} on peripheral ${peripheral.id}`
         );
-        firstChar.on('data', (data, isNotification) => {
-          inst.onDataReceived(peripheral, data, isNotification);
+        characteristic.on('data', (data, isNotification) => {
+          logger.info(
+            `<Received buffer> ${util.inspect(data, { depth: 10, colors: true })} (${data.toString()})`
+          );
+          dataReceivedCb(peripheral, data, isNotification);
         });
-        firstChar.subscribe(function (error) {
+        characteristic.subscribe(function (error) {
           if (error) {
-            logger.info(util.inspect(error, { depth: 99, colors: true }));
+            logger.info(util.inspect(error, { depth: 10, colors: true }));
           } else {
             logger.info(
-              `******* Subscribed to ${firstChar.uuid} on peripheral ${peripheral.id} ********`
+              `******* Subscribed to ${characteristic.uuid} on peripheral ${peripheral.id} ********`
             );
-            inst.connectedPeripherals.add(peripheral);
-            inst.peripheralStatuses[peripheral.id] = {
-              status: STATE_CONNECTED,
-              peripheral,
-              characteristics: firstChar
-            };
-            inst.nextSubscriptionTimeout = null;
+            subscribeSuccessfulCb(peripheral);
           }
         });
       }
@@ -158,7 +161,6 @@ export class BLELib {
 
   async onPeripheralConnect(peripheral) {
     logger.info(`Peripheral ${peripheral.id} +++ CONNECTED +++`);
-    const inst = this;
 
     if (this.nextSubscriptionTimeout) {
       logger.info(`>>>>>> Reconnection detected, cancelling timeout.`);
@@ -167,8 +169,9 @@ export class BLELib {
     logger.info(
       `Queuing peripheral ${peripheral.id} for discovery and subscription.`
     );
+    const discoverAndSubscribeFn = this.discoverAndSubscribe.bind(this);
     this.nextSubscriptionTimeout = setTimeout(function () {
-      inst.discoverAndSubscribe(peripheral);
+      await discoverAndSubscribeFn(peripheral);
     }, DISCOVER_DELAY);
   }
 
@@ -176,37 +179,39 @@ export class BLELib {
     logger.info(`Peripheral ${peripheral.id} --- DISCONNECTED ---`);
     this.connectedPeripherals.delete(peripheral);
     if (this.peripheralStatuses[peripheral.id]) {
-      this.peripheralStatuses[peripheral.id].status = STATE_CONNECTING;
+      // Attempt to reconnect
+      logger.info(`Attempting to reconnect to ${peripheral.id}`);
       await this.connectPeripheral(peripheral);
     }
   }
 
-  async initPeripheral(peripheral) {
-    const inst = this;
-    logger.info('Peripheral initializing.');
+  async connectPeripheral(peripheral) {
+    this.stopScanning();
+    // Attempt to connect to peripheral.
+    // Set state of peripheral to connecting.
+    this.peripheralStatuses[peripheral.id] = {
+      status: PERIPHERAL_STATE_CONNECTING,
+      peripheral
+    };
 
+    logger.info(`Initializing peripheral ${peripheral.id} events`);
+
+    // Init callback for peripheral connected
     const onPeripheralConnect = this.onPeripheralConnect.bind(this);
     peripheral.once('connect', function () {
       onPeripheralConnect(peripheral);
     });
 
+    // Init callback for peripheral disconnected
     const onPeripheralDisconnect = this.onPeripheralDisconnect.bind(this);
     peripheral.once('disconnect', function () {
       onPeripheralDisconnect(peripheral);
     });
 
-    logger.info('Peripheral initialized.');
-  }
+    logger.info(`Peripheral events ${peripheral.id} initialized.`);
 
-  async connectPeripheral(peripheral) {
-    this.stopScanning();
-    ///// Attempt to connect to peripheral.
-    this.peripheralStatuses[peripheral.id] = {
-      status: STATE_CONNECTING,
-      peripheral
-    };
-    logger.info(`Initializing peripheral ${peripheral.id}`);
-    await this.initPeripheral(peripheral);
+    logger.info(`Initiating connection to ${peripheral.id}`);
+    // Initiate the connection after all the events have been registered above.
     peripheral.connect(function (error) {
       if (error) {
         logger.info(
@@ -301,23 +306,33 @@ export class BLELib {
           `Both target peripherals are ready to connect. Stop scanning now...`
         );
         await this.stopScanning();
-        this.state = APP_STATE_CONNECTING;
+        this.state = APP_STATE_INIT_NEXT_CONNECTION;
         break;
       }
-      case APP_STATE_CONNECTING: {
+      case APP_STATE_INIT_NEXT_CONNECTION: {
+        // Get all the MAC address of devices pending connection.
         const deviceMACs = Object.keys(this.pendingConnectionPeripherals) || [];
+
         if (deviceMACs.length === 0) {
+          /**
+           * There are no more pending devices to connect. We can go to idle
+           * state immediately.
+           */
           logger.info(`All devices connected. Going to idle state.`);
           this.currentConnecting = null;
           this.state = APP_STATE_IDLE;
           break;
         }
+
+        // Find the next device to connect
         let deviceMAC = deviceMACs.shift();
         logger.info(`Next MAC: ${deviceMAC}`);
         this.currentConnecting = {
           deviceMAC,
           peripheral: this.pendingConnectionPeripherals[deviceMAC]
         };
+
+        // Initiate the connection to this device (this.currentConnecting)
         logger.info(
           `Connecting to peripheral ${this.currentConnecting.peripheral.id} next...`
         );
@@ -326,7 +341,18 @@ export class BLELib {
         break;
       }
       case APP_STATE_CONNECTING_DEVICE: {
+        /**
+         * This stage happens right after APP_STATE_INIT_NEXT_CONNECTION determines
+         * which is the next device to connect to and initiates a connection.
+         *
+         * This loop will stay in this state until the current connecting device
+         * is finally connected.
+         *
+         * Once the device is connected, it will be 'pushed' into this.connectedPeripherals
+         * list (see connectPeripheral() which is called in the previous state)
+         */
         if (this.connectedPeripherals.has(this.currentConnecting.peripheral)) {
+          // Peripheral is connected, go back to APP_STATE_INIT_NEXT_CONNECTION
           logger.info(
             `Peripheral already connected. Moving to next connection target...`
           );
@@ -334,7 +360,7 @@ export class BLELib {
           delete this.pendingConnectionPeripherals[
             this.currentConnecting.deviceMAC
           ];
-          this.state = APP_STATE_CONNECTING;
+          this.state = APP_STATE_INIT_NEXT_CONNECTION;
         } else {
           logger.info(
             `Still attempting to connect to ${this.currentConnecting.peripheral.id}`
@@ -350,8 +376,8 @@ export class BLELib {
 
         if (rfidStatus && lockStatus) {
           const needReinit =
-            rfidStatus.status === STATE_DISCONNECTED ||
-            lockStatus.status === STATE_DISCONNECTED;
+            rfidStatus.status === PERIPHERAL_STATE_DISCONNECTED ||
+            lockStatus.status === PERIPHERAL_STATE_DISCONNECTED;
 
           if (needReinit) {
             logger.info(
@@ -364,7 +390,8 @@ export class BLELib {
           }
         } else if (testStatus) {
           // Test code.
-          const needReinit = testStatus.status === STATE_DISCONNECTED;
+          const needReinit =
+            testStatus.status === PERIPHERAL_STATE_DISCONNECTED;
           if (needReinit) {
             logger.info(`Test status: ${testStatus.status}`);
             logger.info(
