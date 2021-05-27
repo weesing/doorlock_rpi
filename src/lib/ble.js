@@ -135,11 +135,14 @@ export class BLELib {
 
   onPeripheralSubscribed(peripheral, characteristic) {
     this.connectedPeripherals.add(peripheral);
-    this.peripheralStatuses[peripheral.id] = {
-      status: PERIPHERAL_STATE_CONNECTED,
-      peripheral,
-      characteristics: characteristic
-    };
+    this.peripheralStatuses[peripheral.id] = Object.assign(
+      this.peripheralStatuses[peripheral.id],
+      {
+        status: PERIPHERAL_STATE_CONNECTED,
+        peripheral,
+        characteristics: characteristic
+      }
+    );
     characteristic.write(Buffer.from(`Welcome to the club!`));
     this.nextSubscriptionTimeout = null;
   }
@@ -230,10 +233,13 @@ export class BLELib {
     this.stopScanning();
     // Attempt to connect to peripheral.
     // Set state of peripheral to connecting.
-    this.peripheralStatuses[peripheral.id] = {
-      status: PERIPHERAL_STATE_CONNECTING,
-      peripheral
-    };
+    this.peripheralStatuses[peripheral.id] = Object.assign(
+      this.peripheralStatuses[peripheral.id],
+      {
+        status: PERIPHERAL_STATE_CONNECTING,
+        peripheral
+      }
+    );
 
     logger.info(`Initializing peripheral ${peripheral.id} events`);
 
@@ -270,6 +276,8 @@ export class BLELib {
     peripheral.disconnect();
     delete this.peripheralStatuses[peripheral.id].peripheral;
     delete this.peripheralStatuses[peripheral.id].characteristics;
+    this.peripheralStatuses[peripheral.id].buffer = Buffer.from('');
+    this.peripheralStatuses[peripheral.id].dataString = '';
   }
 
   async onDiscover(peripheral) {
