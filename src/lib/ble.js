@@ -109,7 +109,7 @@ export class BLELib {
       peripheral,
       characteristic: characteristic
     });
-    characteristic.write(Buffer.from(`Welcome to the club!\n`));
+    characteristic.write(Buffer.from(`Welcome to the club!\r`));
     this.nextSubscriptionTimeout = null;
   }
 
