@@ -91,19 +91,14 @@ export class BLELib {
       peripheral.id === this.lockMAC ||
       peripheral.id === this.testMAC
     ) {
-      logger.info(
-        `BEFORE buffer from ${peripheral.id} ${
-          this.peripheralStatuses[peripheral.id].buffer
-        } (${this.peripheralStatuses[peripheral.id].dataString})`
-      );
       this.peripheralStatuses[peripheral.id].dataString += data.toString();
       this.peripheralStatuses[peripheral.id].buffer = Buffer.from(
         this.peripheralStatuses[peripheral.id].dataString
       );
       logger.info(
-        `AFTER buffer from ${peripheral.id} ${
+        `Peripheral buffer from ${peripheral.id} ${
           this.peripheralStatuses[peripheral.id].buffer
-        } (${this.peripheralStatuses[peripheral.id].dataString})`
+        }`
       );
 
       switch (peripheral.id) {
