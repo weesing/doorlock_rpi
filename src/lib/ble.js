@@ -329,19 +329,32 @@ export class BLELib {
         // all should have peripherals already.
         const rfidStatus = this.peripheralStatuses[this.rfidMAC];
         const lockStatus = this.peripheralStatuses[this.lockMAC];
+        const testStatus = this.peripheralStatuses[this.testMAC];
 
-        const needReinit =
-          rfidStatus.status === STATE_DISCONNECTED ||
-          lockStatus.status === STATE_DISCONNECTED;
+        if (rfidStatus && lockStatus) {
+          const needReinit =
+            rfidStatus.status === STATE_DISCONNECTED ||
+            lockStatus.status === STATE_DISCONNECTED;
 
-        if (needReinit) {
-          logger.info(
-            `RFID status: ${rfidStatus.status}, Lock status: ${lockStatus.status}`
-          );
-          logger.info(
-            `Detected disconnection, resetting all connections on next loop.`
-          );
-          this.state = APP_STATE_INIT;
+          if (needReinit) {
+            logger.info(
+              `RFID status: ${rfidStatus.status}, Lock status: ${lockStatus.status}`
+            );
+            logger.info(
+              `Detected disconnection, resetting all connections on next loop.`
+            );
+            this.state = APP_STATE_INIT;
+          }
+        } else if (testStatus) {
+          // Test code.
+          const needReinit = testStatus.status === STATE_DISCONNECTED;
+          if (needReinit) {
+            logger.info(`Test status: ${testStatus.status}`);
+            logger.info(
+              `Detected disconnection, resetting all connections on next loop.`
+            );
+            this.state = APP_STATE_INIT;
+          }
         }
         break;
       }
