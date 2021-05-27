@@ -335,6 +335,10 @@ export class BLELib {
             this.currentConnecting.deviceMAC
           ];
           this.state = APP_STATE_CONNECTING;
+        } else {
+          logger.info(
+            `Still attempting to connect to ${this.currentConnecting.peripheral.id}`
+          );
         }
         break;
       }
