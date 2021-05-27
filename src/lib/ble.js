@@ -35,17 +35,20 @@ export class BLELib {
       // [this.rfidMAC]: {
       //   status: 0,
       //   peripheral: null,
-      //   buffer: Buffer.from('')
+      //   buffer: Buffer.from(''),
+      //   dataString: ''
       // },
       // [this.lockMAC]: {
       //   status: 0,
       //   peripheral: null,
-      //   buffer: Buffer.from('')
+      //   buffer: Buffer.from(''),
+      //   dataString: ''
       // },
       [this.testMAC]: {
         status: 0,
         peripheral: null,
-        buffer: Buffer.from('')
+        buffer: Buffer.from(''),
+        dataString: ''
       }
     };
     this.isScanning = false;
@@ -78,23 +81,51 @@ export class BLELib {
   }
 
   async onDataReceived(peripheral, data, isNotification) {
-    if (peripheral.id === this.rfidMAC) {
+    if (
+      peripheral.id === this.rfidMAC ||
+      peripheral.id === this.lockMAC ||
+      peripheral.id === this.testMAC
+    ) {
+      this.peripheralStatuses[peripheral.id].dataString += data.toString();
+      this.peripheralStatuses[peripheral.id].buffer = Buffer.from(
+        this.peripheralStatuses[peripheral.id].dataString
+      );
       logger.info(
-        `Data from RFID '${data.toString()}', forwarding to door lock...`
+        `Current buffer from ${peripheral.id} ${
+          this.peripheralStatuses[peripheral.id].buffer
+        } (${this.peripheralStatuses[peripheral.id].dataString})`
       );
-      const lockCharacteristic = _.get(
-        this.peripheralStatuses[this.lockMAC],
-        'characteristics'
-      );
-      if (!lockCharacteristic) {
-        logger.info(`Door lock not connected yet, aborting data sending.`);
-        return;
+
+      switch (peripheral.id) {
+        case this.rfidMAC: {
+          logger.info(
+            `Data from RFID '${data.toString()}', forwarding to door lock...`
+          );
+          const lockCharacteristic = _.get(
+            this.peripheralStatuses[this.lockMAC],
+            'characteristics'
+          );
+          if (!lockCharacteristic) {
+            logger.info(`Door lock not connected yet, aborting data sending.`);
+            return;
+          }
+          lockCharacteristic.write(data);
+          break;
+        }
+        case this.lockMAC: {
+          logger.info(`Data received from door lock '${data.toString()}'.`);
+          break;
+        }
+        case this.testMAC: {
+          logger.info(`Data received from test device '${data.toString()}'`);
+          this.peripheralStatuses[this.testMAC].buffer += data.toString();
+          break;
+        }
       }
-      lockCharacteristic.write(data);
-    } else if (peripheral.id === this.lockMAC) {
-      logger.info(`Data received from door lock '${data.toString()}'.`);
-    } else if (peripheral.id === this.testMAC) {
-      logger.info(`Data received from test device '${data.toString()}'`);
+      // if (peripheral.id === this.rfidMAC) {
+      // } else if (peripheral.id === this.lockMAC) {
+      // } else if (peripheral.id === this.testMAC) {
+      // }
     }
   }
 
