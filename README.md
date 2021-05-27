@@ -7,7 +7,8 @@ Install nodejs v8 - `https://www.makersupplies.sg/blogs/tutorials/how-to-install
 
 Install nodemon - `sudo npm install -g nodemon`
 
-- Ensure that your version of node is not > 8
+:warning: **Ensure that your version of node is not > 8**
+> You can follow this to install node version 8 - https://instructables.com/Install-Nodejs-and-Npm-on-Raspberry-Pi/
 
 ## Secrets
 - Make sure you have your secrets contained within `secrets/secrets.json` file.
