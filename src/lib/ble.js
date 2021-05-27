@@ -79,7 +79,9 @@ export class BLELib {
 
   async onDataReceived(peripheral, data, isNotification) {
     if (peripheral.id === this.rfidMAC) {
-      logger.info(`Data from RFID '${data.toString()}', forwarding to door lock...`);
+      logger.info(
+        `Data from RFID '${data.toString()}', forwarding to door lock...`
+      );
       const lockCharacteristic = _.get(
         this.peripheralStatuses[this.lockMAC],
         'characteristics'
@@ -141,7 +143,10 @@ export class BLELib {
         );
         characteristic.on('data', (data, isNotification) => {
           logger.info(
-            `<Received buffer> ${util.inspect(data, { depth: 10, colors: true })} (${data.toString()})`
+            `<Received buffer> ${util.inspect(data, {
+              depth: 10,
+              colors: true
+            })} (${data.toString()})`
           );
           dataReceivedCb(peripheral, data, isNotification);
         });
@@ -170,7 +175,7 @@ export class BLELib {
       `Queuing peripheral ${peripheral.id} for discovery and subscription.`
     );
     const discoverAndSubscribeFn = this.discoverAndSubscribe.bind(this);
-    this.nextSubscriptionTimeout = setTimeout(function () {
+    this.nextSubscriptionTimeout = setTimeout(async () => {
       await discoverAndSubscribeFn(peripheral);
     }, DISCOVER_DELAY);
   }
