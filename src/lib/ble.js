@@ -232,6 +232,13 @@ export class BLELib {
 
       this.pendingConnectionPeripherals[peripheral.id.toLowerCase()] =
         peripheral;
+    } else {
+      logger.info(
+        `Found unknown device ${util.inspect(
+          _.pick(peripheral, ['id', 'address']),
+          { depth: 10 }
+        )}`
+      );
     }
   }
 
