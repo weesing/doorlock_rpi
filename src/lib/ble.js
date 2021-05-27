@@ -79,14 +79,6 @@ export class BLELib {
     logger.info(`State changed to ${state}`);
   }
 
-  async onScanStart() {
-    logger.info(`Scanning started...`);
-  }
-
-  async onScanStop() {
-    logger.info(`Scanning stopped.`);
-  }
-
   async onDataReceived(peripheral, data, isNotification) {
     logger.info(
       `Received - ${util.inspect(data, { depth: 99, colors: true })}`
@@ -264,11 +256,11 @@ export class BLELib {
         await this.stopScanning();
 
         noble.once('scanStart', function () {
-          inst.onScanStart();
+          logger.info(`Scanning started...`);
         });
 
         noble.once('scanStop', function () {
-          inst.onScanStop();
+          logger.info(`Scanning stopped.`);
         });
 
         const onDiscoverCB = this.onDiscover.bind(this);
