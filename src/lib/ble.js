@@ -98,12 +98,12 @@ export class BLELib {
     }
   }
 
-  onPeripheralSubscribed(peripheral) {
+  onPeripheralSubscribed(peripheral, characteristic) {
     this.connectedPeripherals.add(peripheral);
     this.peripheralStatuses[peripheral.id] = {
       status: PERIPHERAL_STATE_CONNECTED,
       peripheral,
-      characteristics: firstChar
+      characteristics: characteristic
     };
     this.nextSubscriptionTimeout = null;
   }
@@ -157,7 +157,7 @@ export class BLELib {
             logger.info(
               `******* Subscribed to ${characteristic.uuid} on peripheral ${peripheral.id} ********`
             );
-            subscribeSuccessfulCb(peripheral);
+            subscribeSuccessfulCb(peripheral, characteristic);
           }
         });
       }
