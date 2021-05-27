@@ -109,10 +109,8 @@ export class BLELib {
       peripheral,
       characteristic: characteristic
     });
-    characteristic.write(
-      Buffer.from(`Welcome to the club!
-    `)
-    );
+    const buffer = Buffer.from(this.meMAC);
+    characteristic.write(buffer);
     this.nextSubscriptionTimeout = null;
   }
 
