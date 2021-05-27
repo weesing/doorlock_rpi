@@ -98,9 +98,6 @@ export class BLELib {
 
       switch (peripheral.id) {
         case this.rfidMAC: {
-          logger.info(
-            `Data from RFID '${data.toString()}', forwarding to door lock...`
-          );
           const lockCharacteristic = _.get(
             this.peripheralStatuses[this.lockMAC],
             'characteristics'
@@ -113,12 +110,9 @@ export class BLELib {
           break;
         }
         case this.lockMAC: {
-          logger.info(`Data received from door lock '${data.toString()}'.`);
           break;
         }
         case this.testMAC: {
-          logger.info(`Data received from test device '${data.toString()}'`);
-          this.peripheralStatuses[this.testMAC].buffer += data.toString();
           break;
         }
       }
