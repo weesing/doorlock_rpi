@@ -358,9 +358,15 @@ export class BLELib {
   }
 
   async initBLE() {
-    const inst = this;
     logger.info(`Intitializing BLE...`);
     this.state = APP_STATE_IDLE;
     this.nextLoop();
+  }
+
+  static getInstance() {
+    if (BLELib._instance === undefined) {
+      BLELib._instance = new BLELib();
+    }
+    return BLELib._instance;
   }
 }
