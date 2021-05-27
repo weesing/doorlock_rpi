@@ -78,11 +78,8 @@ export class BLELib {
       peripheral.id === this.testMAC
     ) {
       this.peripheralStatuses[peripheral.id].appendBuffer(data);
-      logger.info(
-        `Peripheral buffer from ${peripheral.id} ${
-          this.peripheralStatuses[peripheral.id].buffer
-        }`
-      );
+      const buffer = this.peripheralStatuses[peripheral.id].buffer;
+      logger.info(`Peripheral buffer from ${peripheral.id} ${buffer}`);
 
       switch (peripheral.id) {
         case this.rfidMAC: {
@@ -112,7 +109,7 @@ export class BLELib {
       peripheral,
       characteristic: characteristic
     });
-    characteristic.write(Buffer.from(`Welcome to the club!`));
+    characteristic.write(Buffer.from(`Welcome to the club!\n`));
     this.nextSubscriptionTimeout = null;
   }
 
