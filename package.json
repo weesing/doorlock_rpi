@@ -1,5 +1,5 @@
 {
-  "name": "raspberry-node-bleslave",
+  "name": "doorlock_rpi",
   "version": "0.0.0",
   "private": true,
   "scripts": {
