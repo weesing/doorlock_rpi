@@ -18,6 +18,8 @@ npm install -g nodemon
 
 :warning: **IMPORTANT!!! Ensure that your version of node is not > 8**
 
+> Tip: You can follow the instructions here to install NodeJS version 8 - https://www.instructables.com/Install-Nodejs-and-Npm-on-Raspberry-Pi/
+
 ## Install the required npm libraries
 ```
 npm install
