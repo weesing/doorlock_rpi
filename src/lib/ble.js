@@ -51,6 +51,11 @@ export class BLELib {
         dataString: ''
       }
     };
+    logger.info(
+      `Current buffer from ${this.testMAC} ${
+        this.peripheralStatuses[this.testMAC].buffer
+      } (${this.peripheralStatuses[this.testMAC].dataString})`
+    );
     this.isScanning = false;
     this.state = APP_STATE_INIT;
     this.currentConnecting = null;
