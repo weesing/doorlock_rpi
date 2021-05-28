@@ -50,18 +50,21 @@ export class PeripheralStatus {
   }
 
   appendBuffer(buffer) {
-    const currentString = buffer.toString();
+    // const currentString = buffer.toString();
 
-    // join all together and append the new data.
-    let concat = this._dataStringHistory.join('/r/n');
-    concat += currentString;
+    // // join all together and append the new data.
+    // let concat = this._dataStringHistory.join('/r/n');
+    // concat += currentString;
 
-    // split up again by /r/n
-    this._dataStringHistory = concat.split('/r/n');
-    this._dataString +=
-      this._dataStringHistory[this._dataStringHistory.length - 1];
+    // // split up again by /r/n
+    // this._dataStringHistory = concat.split('/r/n');
+    // this._dataString +=
+    //   this._dataStringHistory[this._dataStringHistory.length - 1];
 
-    // assign the latest buffer
+    // // assign the latest buffer
+    // this._buffer = Buffer.from(this._dataString);
+
+    this._dataString += buffer.toString();
     this._buffer = Buffer.from(this._dataString);
   }
 
