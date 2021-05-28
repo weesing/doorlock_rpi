@@ -15,7 +15,7 @@ const APP_STATE_INIT_NEXT_CONNECTION = 2;
 const APP_STATE_CONNECTING_DEVICE = 3;
 const APP_STATE_IDLE = 4;
 
-const DISCOVER_DELAY = 3000;
+const DISCOVER_DELAY = 0;
 
 export class BLELib {
   constructor() {
@@ -30,13 +30,13 @@ export class BLELib {
 
     this.meMAC = secrets.nodeMAC.toLowerCase();
 
-    this.connectedPeripherals = new Set();
-    this.pendingConnectionPeripherals = {};
     this.peripheralStatuses = {
       // [this.rfidMAC]: new PeripheralStatus(),
       // [this.lockMAC]: new PeripheralStatus(),
       [this.testMAC]: new PeripheralStatus()
     };
+    this.discoveredPeripherals = {};
+    this.connectedPeripherals = new Set();
     logger.info(
       `Current buffer from ${this.testMAC} ${
         this.peripheralStatuses[this.testMAC].buffer
@@ -59,8 +59,7 @@ export class BLELib {
         )}, adding to pending connection list. <<<<`
       );
 
-      this.pendingConnectionPeripherals[peripheral.id.toLowerCase()] =
-        peripheral;
+      this.discoveredPeripherals[peripheral.id.toLowerCase()] = peripheral;
     } else {
       logger.info(
         `Found unknown device ${util.inspect(
@@ -296,15 +295,23 @@ export class BLELib {
           logger.info(`Scanning stopped.`);
         });
 
+        // Start the scan and go to next state APP_STATE_SCANNING
         await this.startScanning();
         this.state = APP_STATE_SCANNING;
         break;
       }
       case APP_STATE_SCANNING: {
+        /**
+         * This state simply waits for all the expected devices to be
+         * discovered before proceeding to APP_STATE_INIT_NEXT_CONNECTION
+         * where the actual connection happens.
+         */
         let isReadyForConnection = true;
-        // All devices must be scanned in order to be ready for connections.
+
+        // Look into the all the targets and make sure they have been discovered.
         for (const targetMAC of this.connectionTargetMACs) {
-          if (_.isNil(this.pendingConnectionPeripherals[targetMAC])) {
+          if (_.isNil(this.discoveredPeripherals[targetMAC])) {
+            // one of the device still not scanned yet.
             isReadyForConnection = false;
             break;
           }
@@ -323,9 +330,9 @@ export class BLELib {
       }
       case APP_STATE_INIT_NEXT_CONNECTION: {
         // Get all the MAC address of devices pending connection.
-        const deviceMACs = Object.keys(this.pendingConnectionPeripherals) || [];
+        const discoveredMACs = Object.keys(this.discoveredPeripherals) || [];
 
-        if (deviceMACs.length === 0) {
+        if (discoveredMACs.length === 0) {
           /**
            * There are no more pending devices to connect. We can go to idle
            * state immediately.
@@ -337,11 +344,11 @@ export class BLELib {
         }
 
         // Find the next device to connect
-        let deviceMAC = deviceMACs.shift();
+        let deviceMAC = discoveredMACs.shift();
         logger.info(`Next MAC: ${deviceMAC}`);
         this.currentConnecting = {
           deviceMAC,
-          peripheral: this.pendingConnectionPeripherals[deviceMAC]
+          peripheral: this.discoveredPeripherals[deviceMAC]
         };
 
         // Initiate the connection to this device (this.currentConnecting)
@@ -367,9 +374,7 @@ export class BLELib {
           // Peripheral is connected, go back to APP_STATE_INIT_NEXT_CONNECTION
           logger.info(`Moving to next connection target...`);
           // Remove from pending list
-          delete this.pendingConnectionPeripherals[
-            this.currentConnecting.deviceMAC
-          ];
+          delete this.discoveredPeripherals[this.currentConnecting.deviceMAC];
           this.state = APP_STATE_INIT_NEXT_CONNECTION;
         } else {
           logger.info(
