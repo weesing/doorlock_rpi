@@ -59,11 +59,4 @@ export class BLELibTest extends BLELib {
 
     super.loop();
   }
-
-  static getInstance() {
-    if (BLELibTest._instance === undefined) {
-      BLELibTest._instance = new BLELibTest();
-    }
-    return BLELibTest._instance;
-  }
 }

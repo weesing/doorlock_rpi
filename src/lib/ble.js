@@ -412,9 +412,9 @@ export class BLELib {
   }
 
   static getInstance() {
-    if (BLELib._instance === undefined) {
-      BLELib._instance = new BLELib();
+    if (this._instance === undefined) {
+      this._instance = new this();
     }
-    return BLELib._instance;
+    return this._instance;
   }
 }
