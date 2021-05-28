@@ -143,15 +143,23 @@ export class BLELib {
           `[${peripheral.id}] Discovered services and characteristics for ${peripheral.id}`
         );
         logger.info(`Errors: ${error ? error : 'none'}`);
-        logger.info(
-          `Services: ${services.map((service) =>
-            _.pick(service, ['_peripheralId', 'uuid'])
-          )}`
+        const servicesLog = services.map((service) =>
+          _.pick(service, ['_peripheralId', 'uuid'])
+        );
+        const charLog = characteristics.map((char) =>
+          _.pick(char, ['uuid', 'name', 'type', 'properties'])
         );
         logger.info(
-          `Characteristics: ${characteristics.map((char) =>
-            _.pick(char, ['uuid', 'name', 'type', 'properties'])
-          )}`
+          `[${peripheral.id}] Services: ${util.inspect(servicesLog, {
+            depth: 10,
+            colors: true
+          })}`
+        );
+        logger.info(
+          `[${peripheral.id}] Characteristics: ${util.inspect(charLog, {
+            depth: 10,
+            colors: true
+          })}`
         );
 
         let characteristic = characteristics[0];
