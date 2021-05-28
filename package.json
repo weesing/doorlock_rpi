@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www",
-    "testmode": "node ./bin/www testmode"
+    "start": "node index.js",
+    "testmode": "node index.js testmode"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
