@@ -130,7 +130,7 @@ export class BLELib {
 
   async discoverAndSubscribe(peripheral) {
     logger.info(
-      `Connected peripheral ${peripheral.id}. Discovering services and characteristics...`
+      `[${peripheral.id}] Discovering services and characteristics...`
     );
 
     const dataReceivedCb = this.onDataReceived.bind(this);
@@ -142,21 +142,16 @@ export class BLELib {
         logger.info(
           `[${peripheral.id}] Discovered services and characteristics for ${peripheral.id}`
         );
+        logger.info(`Errors: ${error ? error : 'none'}`);
         logger.info(
-          `[${peripheral.id}] 
-              ${util.inspect(
-                {
-                  error,
-                  services: services.map((service) =>
-                    _.pick(service, ['_peripheralId', 'uuid'])
-                  ),
-                  characteristics: characteristics.map((char) =>
-                    _.pick(char, ['uuid', 'name', 'type', 'properties'])
-                  )
-                },
-                { depth: 10, colors: true }
-              )}
-          `
+          `Services: ${services.map((service) =>
+            _.pick(service, ['_peripheralId', 'uuid'])
+          )}`
+        );
+        logger.info(
+          `Characteristics: ${characteristics.map((char) =>
+            _.pick(char, ['uuid', 'name', 'type', 'properties'])
+          )}`
         );
 
         let characteristic = characteristics[0];
