@@ -1,5 +1,6 @@
 import { BLELib } from './ble';
 import { SecretsLoader } from './secrets_loader';
+import logger from './logger';
 import {
   PERIPHERAL_STATE_DISCONNECTED,
   PeripheralStatus
