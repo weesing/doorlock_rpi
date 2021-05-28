@@ -371,7 +371,7 @@ export class BLELib {
           this.state = APP_STATE_INIT_NEXT_CONNECTION;
         } else {
           logger.info(
-            `Still attempting to connect to ${this.currentConnecting.peripheral.id}`
+            `Waiting to connect to ${this.currentConnecting.peripheral.id}`
           );
         }
         break;
