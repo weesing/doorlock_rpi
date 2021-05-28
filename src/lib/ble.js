@@ -22,26 +22,18 @@ export class BLELib {
     const secrets = SecretsLoader.loadSecrets();
     logger.info(secrets);
 
-    // this.rfidMAC = secrets.rfidMAC.toLowerCase();
-    // this.lockMAC = secrets.lockMAC.toLowerCase();
-    // this.connectionTargetMACs = [this.rfidMAC, this.lockMAC];
-    this.testMAC = secrets.testMAC.toLowerCase();
-    this.connectionTargetMACs = [this.testMAC];
+    this.rfidMAC = secrets.rfidMAC.toLowerCase();
+    this.lockMAC = secrets.lockMAC.toLowerCase();
+    this.connectionTargetMACs = [this.rfidMAC, this.lockMAC];
 
     this.meMAC = secrets.nodeMAC.toLowerCase();
 
     this.peripheralStatuses = {
-      // [this.rfidMAC]: new PeripheralStatus(),
-      // [this.lockMAC]: new PeripheralStatus(),
-      [this.testMAC]: new PeripheralStatus()
+      [this.rfidMAC]: new PeripheralStatus(),
+      [this.lockMAC]: new PeripheralStatus()
     };
     this.discoveredPeripherals = {};
     this.connectedPeripherals = new Set();
-    logger.info(
-      `Current buffer from ${this.testMAC} ${
-        this.peripheralStatuses[this.testMAC].buffer
-      } (${this.peripheralStatuses[this.testMAC].dataString})`
-    );
     this.isScanning = false;
     this.state = APP_STATE_INIT;
     this.currentConnecting = null;
@@ -100,8 +92,7 @@ export class BLELib {
   async onDataReceived(peripheral, data, isNotification) {
     if (
       peripheral.id === this.rfidMAC ||
-      peripheral.id === this.lockMAC ||
-      peripheral.id === this.testMAC
+      peripheral.id === this.lockMAC
     ) {
       this.peripheralStatuses[peripheral.id].appendBuffer(data);
       const buffer = this.peripheralStatuses[peripheral.id].buffer;
@@ -119,9 +110,6 @@ export class BLELib {
           break;
         }
         case this.lockMAC: {
-          break;
-        }
-        case this.testMAC: {
           break;
         }
       }
@@ -387,7 +375,6 @@ export class BLELib {
         // all should have peripherals already.
         const rfidStatus = this.peripheralStatuses[this.rfidMAC];
         const lockStatus = this.peripheralStatuses[this.lockMAC];
-        const testStatus = this.peripheralStatuses[this.testMAC];
 
         if (rfidStatus && lockStatus) {
           const needReinit =
@@ -398,17 +385,6 @@ export class BLELib {
             logger.info(
               `RFID status: ${rfidStatus.status}, Lock status: ${lockStatus.status}`
             );
-            logger.info(
-              `Detected disconnection, resetting all connections on next loop.`
-            );
-            this.state = APP_STATE_INIT;
-          }
-        } else if (testStatus) {
-          // Test code.
-          const needReinit =
-            testStatus.status === PERIPHERAL_STATE_DISCONNECTED;
-          if (needReinit) {
-            logger.info(`Test status: ${testStatus.status}`);
             logger.info(
               `Detected disconnection, resetting all connections on next loop.`
             );

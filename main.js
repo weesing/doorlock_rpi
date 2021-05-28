@@ -1,2 +1,2 @@
-import boot from './boot/boot';
+import boot from './src/boot/boot';
 boot();
