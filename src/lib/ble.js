@@ -140,30 +140,32 @@ export class BLELib {
       ['ffe1'],
       function (error, services, characteristics) {
         logger.info(
-          `DISCOVERED SERVICES AND CHARACTERISTICS on ${peripheral.id}`
+          `[${peripheral.id}] Discovered services and characteristics for ${peripheral.id}`
         );
         logger.info(
-          util.inspect(
-            {
-              error,
-              services: services.map((service) =>
-                _.pick(service, ['_peripheralId', 'uuid'])
-              ),
-              characteristics: characteristics.map((char) =>
-                _.pick(char, ['uuid', 'name', 'type', 'properties'])
-              )
-            },
-            { depth: 10, colors: true }
-          )
+          `[${peripheral.id}] 
+              ${util.inspect(
+                {
+                  error,
+                  services: services.map((service) =>
+                    _.pick(service, ['_peripheralId', 'uuid'])
+                  ),
+                  characteristics: characteristics.map((char) =>
+                    _.pick(char, ['uuid', 'name', 'type', 'properties'])
+                  )
+                },
+                { depth: 10, colors: true }
+              )}
+          `
         );
 
         let characteristic = characteristics[0];
         logger.info(
-          `Subscribing to characteristics ${characteristic.uuid} on peripheral ${peripheral.id}`
+          `[${peripheral.id}] Subscribing to characteristics ${characteristic.uuid}`
         );
         characteristic.on('data', (data, isNotification) => {
           logger.info(
-            `<Received buffer> ${util.inspect(data, {
+            `[${peripheral.id}] Received buffer -> ${util.inspect(data, {
               depth: 10,
               colors: true
             })} (${data.toString()})`
@@ -175,7 +177,7 @@ export class BLELib {
             logger.info(util.inspect(error, { depth: 10, colors: true }));
           } else {
             logger.info(
-              `******* Subscribed to ${characteristic.uuid} on peripheral ${peripheral.id} ********`
+              `[${peripheral.id}] >>>> Subscribed to ${characteristic.uuid} on peripheral <<<<`
             );
             subscribeSuccessfulCb(peripheral, characteristic);
           }
@@ -185,14 +187,16 @@ export class BLELib {
   }
 
   async onPeripheralConnect(peripheral) {
-    logger.info(`Peripheral ${peripheral.id} +++ CONNECTED +++`);
+    logger.info(`[${peripheral.id}] >>>> Peripheral CONNECTED <<<<`);
 
     if (this.nextSubscriptionTimeout) {
-      logger.info(`>>>>>> Reconnection detected, cancelling timeout.`);
+      logger.info(
+        `[${peripheral.id}] >>>>>> Reconnection detected, cancelling timeout.`
+      );
       clearTimeout(this.nextSubscriptionTimeout);
     }
     logger.info(
-      `Queuing peripheral ${peripheral.id} for discovery and subscription.`
+      `[${peripheral.id}] Queuing peripheral for discovery and subscription.`
     );
     const discoverAndSubscribeFn = this.discoverAndSubscribe.bind(this);
     this.nextSubscriptionTimeout = setTimeout(async () => {
@@ -201,11 +205,11 @@ export class BLELib {
   }
 
   async onPeripheralDisconnect(peripheral) {
-    logger.info(`Peripheral ${peripheral.id} --- DISCONNECTED ---`);
+    logger.warn(`[${peripheral.id}] Peripheral DISCONNECTED`);
     this.connectedPeripherals.delete(peripheral);
     if (this.peripheralStatuses[peripheral.id]) {
       // Attempt to reconnect
-      logger.info(`Attempting to reconnect to ${peripheral.id}`);
+      logger.info(`[${peripheral.id}] Attempting to reconnect...`);
       await this.connectPeripheral(peripheral);
     }
   }
@@ -219,7 +223,7 @@ export class BLELib {
       peripheral
     });
 
-    logger.info(`Initializing peripheral ${peripheral.id} events`);
+    logger.info(`[${peripheral.id}] Initializing peripheral events`);
 
     // Init callback for peripheral connected
     const onPeripheralConnect = this.onPeripheralConnect.bind(this);
@@ -233,15 +237,15 @@ export class BLELib {
       onPeripheralDisconnect(peripheral);
     });
 
-    logger.info(`Peripheral events ${peripheral.id} initialized.`);
+    logger.info(`[${peripheral.id}] Peripheral events initialized.`);
 
-    logger.info(`Initiating connection to ${peripheral.id}`);
+    logger.info(`[${peripheral.id}] Initiating connection...`);
     // Initiate the connection after all the events have been registered above.
     peripheral.connect(function (error) {
       if (error) {
         logger.info(
-          `Errors on connect to ${peripheral.id} - ${util.inspect(error, {
-            depth: 99,
+          `[${peripheral.id}] Errors on connect to - ${util.inspect(error, {
+            depth: 10,
             colors: true
           })}`
         );
@@ -250,7 +254,7 @@ export class BLELib {
   }
 
   async disconnectPeripheral(peripheral) {
-    logger.info(`Disconnecting ${peripheral.id}`);
+    logger.info(`[${peripheral.id}] Disconnecting peripheral`);
     peripheral.disconnect();
     this.peripheralStatuses[peripheral.id].reset();
   }
@@ -310,7 +314,7 @@ export class BLELib {
         }
 
         logger.info(
-          `Both target peripherals are ready to connect. Stop scanning now...`
+          `>>>> Target peripheral(s) are ready to connect. Stop scanning now... <<<<`
         );
         await this.stopScanning();
         this.state = APP_STATE_INIT_NEXT_CONNECTION;
