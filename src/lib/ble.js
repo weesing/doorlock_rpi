@@ -96,7 +96,7 @@ export class BLELib {
     if (peripheral.id === this.rfidMAC || peripheral.id === this.lockMAC) {
       this.peripheralStatuses[peripheral.id].appendBuffer(data);
       const buffer = this.peripheralStatuses[peripheral.id].buffer;
-      logger.info(`Peripheral buffer from ${peripheral.id} ${buffer}`);
+      logger.info(`[${peripheral.id}] Peripheral buffer ${buffer}`);
 
       switch (peripheral.id) {
         case this.rfidMAC: {
