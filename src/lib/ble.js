@@ -10,11 +10,13 @@ import {
   PeripheralStatus
 } from '../peripheral/peripheral_status';
 
-const APP_STATE_INIT = 0;
-const APP_STATE_SCANNING = 1;
-const APP_STATE_INIT_NEXT_CONNECTION = 2;
-const APP_STATE_CONNECTING_DEVICE = 3;
-const APP_STATE_IDLE = 4;
+import {
+  APP_STATE_INIT,
+  APP_STATE_SCANNING,
+  APP_STATE_INIT_NEXT_CONNECTION,
+  APP_STATE_CONNECTING_DEVICE,
+  APP_STATE_IDLE
+} from './app_state';
 
 const DISCOVER_DELAY = 0;
 
@@ -91,10 +93,7 @@ export class BLELib {
   }
 
   async onDataReceived(peripheral, data, isNotification) {
-    if (
-      peripheral.id === this.rfidMAC ||
-      peripheral.id === this.lockMAC
-    ) {
+    if (peripheral.id === this.rfidMAC || peripheral.id === this.lockMAC) {
       this.peripheralStatuses[peripheral.id].appendBuffer(data);
       const buffer = this.peripheralStatuses[peripheral.id].buffer;
       logger.info(`Peripheral buffer from ${peripheral.id} ${buffer}`);

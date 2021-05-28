@@ -1,11 +1,15 @@
 import { BLELib } from './ble';
 import { SecretsLoader } from './secrets_loader';
-import { PeripheralStatus } from '../peripheral/peripheral_status';
+import {
+  PERIPHERAL_STATE_DISCONNECTED,
+  PeripheralStatus
+} from '../peripheral/peripheral_status';
+import { APP_STATE_INIT, APP_STATE_IDLE } from './app_state';
 
 export class BLELibTest extends BLELib {
   constructor() {
     super();
-    
+
     const secrets = SecretsLoader.loadSecrets();
 
     this.testMAC = secrets.testMAC.toLowerCase();
