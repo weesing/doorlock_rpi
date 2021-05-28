@@ -1,4 +1,6 @@
 import { BLELib } from './ble';
+import { SecretsLoader } from './secrets_loader';
+import { PeripheralStatus } from '../peripheral/peripheral_status';
 
 export class BLELibTest extends BLELib {
   constructor() {
