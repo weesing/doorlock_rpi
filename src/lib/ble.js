@@ -142,7 +142,7 @@ export class BLELib {
         logger.info(
           `[${peripheral.id}] Discovered services and characteristics for ${peripheral.id}`
         );
-        logger.info(`Errors: ${error ? error : 'none'}`);
+        logger.info(`[${peripheral.id}] Errors: ${error ? error : 'none'}`);
         const servicesLog = services.map((service) =>
           _.pick(service, ['_peripheralId', 'uuid'])
         );
