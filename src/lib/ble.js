@@ -3,11 +3,12 @@ import _ from 'lodash';
 import noble from 'noble';
 import logger from './logger';
 import { SecretsLoader } from './secrets_loader';
-import { PeripheralStatus } from '../peripheral/peripheral_status';
-
-const PERIPHERAL_STATE_DISCONNECTED = 0;
-const PERIPHERAL_STATE_CONNECTING = 1;
-const PERIPHERAL_STATE_CONNECTED = 2;
+import {
+  PERIPHERAL_STATE_DISCONNECTED,
+  PERIPHERAL_STATE_CONNECTING,
+  PERIPHERAL_STATE_CONNECTED,
+  PeripheralStatus
+} from '../peripheral/peripheral_status';
 
 const APP_STATE_INIT = 0;
 const APP_STATE_SCANNING = 1;
