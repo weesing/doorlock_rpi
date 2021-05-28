@@ -27,7 +27,7 @@ export class BLELibTest extends BLELib {
     if (peripheral.id === this.testMAC) {
       this.peripheralStatuses[peripheral.id].appendBuffer(data);
       const buffer = this.peripheralStatuses[peripheral.id].buffer;
-      logger.info(`Peripheral buffer from ${peripheral.id} ${buffer}`);
+      logger.info(`[${peripheral.id}] Peripheral buffer - ${buffer}`);
 
       switch (peripheral.id) {
         case this.testMAC: {
