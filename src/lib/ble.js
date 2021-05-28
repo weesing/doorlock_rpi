@@ -45,6 +45,30 @@ export class BLELib {
     this.isScanning = false;
     this.state = APP_STATE_INIT;
     this.currentConnecting = null;
+
+    this.onDiscoverCb = this.onDiscover.bind(this);
+  }
+
+  onDiscover(peripheral) {
+    const targetSet = new Set(this.connectionTargetMACs);
+    if (targetSet.has(peripheral.id.toLowerCase())) {
+      logger.info(
+        `>>>> Discovered peripheral ${util.inspect(
+          _.pick(peripheral, ['id', 'address']),
+          { depth: 99, colors: true }
+        )}, adding to pending connection list. <<<<`
+      );
+
+      this.pendingConnectionPeripherals[peripheral.id.toLowerCase()] =
+        peripheral;
+    } else {
+      logger.info(
+        `Found unknown device ${util.inspect(
+          _.pick(peripheral, ['id', 'address']),
+          { depth: 10 }
+        )}`
+      );
+    }
   }
 
   async startScanning() {
@@ -53,22 +77,25 @@ export class BLELib {
       return;
     }
     this.isScanning = true;
+
+    // Re-register for discover event.
+    noble.removeListener('discover', this.onDiscoverCb);
+    noble.on('discover', this.onDiscoverCb);
+
+    // Start the scanning.
     noble.startScanning([], false, function (error) {
       if (error) {
-        logger.info(`Error on start scan.`);
-        logger.info(util.inspect(error, { depth: 99, colors: true }));
+        logger.error(`Error on start scan.`);
+        logger.error(util.inspect(error, { depth: 10, colors: true }));
         return;
       }
     });
   }
 
   async stopScanning() {
+    noble.removeListener('discover', this.onDiscoverCb);
     noble.stopScanning();
     this.isScanning = false;
-  }
-
-  async onStateChange(state) {
-    logger.info(`State changed to ${state}`);
   }
 
   async onDataReceived(peripheral, data, isNotification) {
@@ -241,28 +268,6 @@ export class BLELib {
     this.peripheralStatuses[peripheral.id].reset();
   }
 
-  async onDiscover(peripheral) {
-    const targetSet = new Set(this.connectionTargetMACs);
-    if (targetSet.has(peripheral.id.toLowerCase())) {
-      logger.info(
-        `>>>> Discovered peripheral ${util.inspect(
-          _.pick(peripheral, ['id', 'address']),
-          { depth: 99, colors: true }
-        )}, adding to pending connection list. <<<<`
-      );
-
-      this.pendingConnectionPeripherals[peripheral.id.toLowerCase()] =
-        peripheral;
-    } else {
-      logger.info(
-        `Found unknown device ${util.inspect(
-          _.pick(peripheral, ['id', 'address']),
-          { depth: 10 }
-        )}`
-      );
-    }
-  }
-
   async disconnectAllDevices() {
     logger.info(`Disconnecting all devices`);
     for (const deviceId of Object.keys(this.peripheralStatuses)) {
@@ -290,9 +295,6 @@ export class BLELib {
         noble.once('scanStop', function () {
           logger.info(`Scanning stopped.`);
         });
-
-        const onDiscoverCB = this.onDiscover.bind(this);
-        noble.on('discover', onDiscoverCB);
 
         await this.startScanning();
         this.state = APP_STATE_SCANNING;
