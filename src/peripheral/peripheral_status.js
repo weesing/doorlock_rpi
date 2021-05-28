@@ -8,6 +8,7 @@ export class PeripheralStatus {
     this._peripheral = null;
     this._dataString = '';
     this._buffer = Buffer.from(this._dataString);
+    this._dataStringHistory = [];
     this._characteristic = null;
   }
 
@@ -31,6 +32,10 @@ export class PeripheralStatus {
     return this._characteristic;
   }
 
+  get dataStringHistory() {
+     return this._dataStringHistory;
+  }
+
   bulkSet(args) {
     const { status, peripheral, characteristic } = args;
     if (status) {
@@ -45,11 +50,23 @@ export class PeripheralStatus {
   }
 
   appendBuffer(buffer) {
-    this._dataString += buffer.toString();
+    const currentString = buffer.toString();
+
+    // join all together and append the new data.
+    let concat = this._dataStringHistory.join('/r/n');
+    concat += currentString;
+
+    // split up again by /r/n
+    this._dataStringHistory = concat.split('/r/n');
+    this._dataString +=
+      this._dataStringHistory[this._dataStringHistory.length - 1];
+
+    // assign the latest buffer
     this._buffer = Buffer.from(this._dataString);
   }
 
   clearBuffer() {
+    this._history = [];
     this._dataString = '';
     this._buffer = Buffer.from(this._dataString);
   }

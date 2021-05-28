@@ -97,6 +97,11 @@ export class BLELib {
       this.peripheralStatuses[peripheral.id].appendBuffer(data);
       const buffer = this.peripheralStatuses[peripheral.id].buffer;
       logger.info(`[${peripheral.id}] Peripheral buffer ${buffer}`);
+      logger.info(
+        `[${peripheral.id}] Peripheral history ${
+          this.peripheralStatuses[peripheral.id].dataStringHistory
+        }`
+      );
 
       switch (peripheral.id) {
         case this.rfidMAC: {
