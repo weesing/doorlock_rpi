@@ -1,3 +1,7 @@
+export const PERIPHERAL_STATE_DISCONNECTED = 0;
+export const PERIPHERAL_STATE_CONNECTING = 1;
+export const PERIPHERAL_STATE_CONNECTED = 2;
+
 export class PeripheralStatus {
   constructor(args) {
     this._status = 0;
