@@ -4,7 +4,11 @@ import logger from '../lib/logger';
 
 var boot = async function () {
   const config = require('../../config/config.json');
-  if (config.test) {
+
+  logger.info(`Configuration loaded`);
+  logger.info(config);
+
+  if (config.testMode) {
     logger.info(`Running in test mode.`);
     await BLELibTest.getInstance().initBLE();
   } else {
