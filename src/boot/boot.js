@@ -9,7 +9,7 @@ var boot = async function () {
   logger.info(config);
 
   if (config.testMode) {
-    logger.info(`Running in test mode.`);
+    logger.warn(`Running in test mode.`);
     await BLELibTest.getInstance().initBLE();
   } else {
     await BLELib.getInstance().initBLE();

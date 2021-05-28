@@ -3,6 +3,8 @@ import { BLELib } from './ble';
 export class BLELibTest extends BLELib {
   constructor() {
     super();
+    
+    const secrets = SecretsLoader.loadSecrets();
 
     this.testMAC = secrets.testMAC.toLowerCase();
     this.connectionTargetMACs = [this.testMAC];
@@ -48,6 +50,13 @@ export class BLELibTest extends BLELib {
       }
     }
 
-    super.loop();    
+    super.loop();
+  }
+
+  static getInstance() {
+    if (BLELibTest._instance === undefined) {
+      BLELibTest._instance = new BLELibTest();
+    }
+    return BLELibTest._instance;
   }
 }
