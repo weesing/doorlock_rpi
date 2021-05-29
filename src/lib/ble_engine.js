@@ -164,10 +164,10 @@ export class BLEEngine {
       this.disconnectPeripheral(peripheral);
     };
 
-    peripheral.once('connect', function () {
+    peripheral.once('connect', async function () {
       await onPeripheralConnected(peripheral);
     });
-    peripheral.once('disconnect', function () {
+    peripheral.once('disconnect', async function () {
       await onPeripheralDisconnect(peripheral);
     });
 
@@ -207,7 +207,7 @@ export class BLEEngine {
     const discoveredMACs = Object.keys(this.discoveredPeripherals) || [];
 
     for (const discoveredMAC of discoveredMACs) {
-      const discoveredPeripheral = this.discoveredPeripherals[peripheralId];
+      const discoveredPeripheral = this.discoveredPeripherals[discoveredMAC];
       const status = this.peripheralStatuses[discoveredMAC].status;
       switch (status) {
         case PERIPHERAL_STATE_CONNECTING:
@@ -300,9 +300,6 @@ export class BLEEngine {
   async initBLE() {
     logger.info(`Intitializing BLE...`);
 
-    await this.disconnectAllDevices();
-    await this.stopScanning();
-
     this.onDiscoverCb = this.onDiscover.bind(this);
 
     noble.on('scanStart', function () {
@@ -312,6 +309,9 @@ export class BLEEngine {
     noble.on('scanStop', function () {
       logger.info(`Scanning stopped.`);
     });
+
+    await this.disconnectAllDevices();
+    await this.stopScanning();
 
     // Start the scan and go to next state APP_STATE_SCANNING
     await this.startScanning();
