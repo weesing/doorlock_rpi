@@ -6,7 +6,7 @@ import { SecretsLoader } from './secrets_loader';
 import {
   PERIPHERAL_STATE_DISCONNECTED,
   PERIPHERAL_STATE_CONNECTING,
-  PERIPHERAL_STATE_CONNECTED,
+  PERIPHERAL_STATE_SUBSCRIBED,
   PeripheralStatus
 } from '../peripheral/peripheral_status';
 
@@ -121,7 +121,7 @@ export class BLELib {
   onPeripheralSubscribed(peripheral, characteristic) {
     this.connectedPeripherals.add(peripheral);
     this.peripheralStatuses[peripheral.id].bulkSet({
-      status: PERIPHERAL_STATE_CONNECTED,
+      status: PERIPHERAL_STATE_SUBSCRIBED,
       peripheral,
       characteristic: characteristic
     });
