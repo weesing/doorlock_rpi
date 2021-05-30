@@ -27,6 +27,8 @@ export class ConnectionManager {
     this.isScanning = false;
 
     this.onDiscoverCb = this.onDiscover.bind(this);
+
+    this.dataReceiver = null;
     this.onDataReceivedFn = null;
   }
 
@@ -240,6 +242,7 @@ export class ConnectionManager {
       logger.error(e);
     }
     this.peripheralStatuses[peripheralId].reset();
+    this.dataReceiver.clearBufferByPeripheral(peripheralId);
     // clear from connected and subscribed list.
     this.connectedPeripheralIds.delete(peripheralId);
     this.subscribedPeripheralIds.delete(peripheralId);
@@ -280,6 +283,7 @@ export class ConnectionManager {
   }
 
   async startConnections(dataReceiver) {
+    this.dataReceiver = dataReceiver;
     this.onDataReceivedFn = dataReceiver.onDataReceived.bind(dataReceiver);
 
     noble.on('scanStart', async function () {

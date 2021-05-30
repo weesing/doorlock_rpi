@@ -2,6 +2,7 @@ import _ from 'lodash';
 import logger from './logger';
 import { SecretsLoader } from './secrets_loader';
 import { ConnectionManager } from './connection_manager';
+import { PeripheralBuffer } from '../peripheral/peripheral_buffer';
 
 export class BLEEngine {
   constructor() {
@@ -13,22 +14,34 @@ export class BLEEngine {
     this.meMAC = secrets.nodeMAC.toLowerCase();
 
     this._connectionManager = null;
+
+    // initialize all peripheral buffers
+    this.initBuffer();
+  }
+
+  get connectionTargetMACs() {
+    return [this.rfidMAC, this.lockMAC];
   }
 
   get connectionManager() {
     return this._connectionManager;
   }
 
+  initBuffer() {
+    for (const deviceMAC of this.connectionTargetMACs) {
+      this.peripheralBuffer[deviceMAC] = new PeripheralBuffer();
+    }
+  }
+
+  clearBufferByPeripheral(peripheralId) {
+    this.peripheralBuffer[peripheralId].clearBuffer();
+  }
+
   async onDataReceived(peripheral, data, isNotification) {
     if (peripheral.id === this.rfidMAC || peripheral.id === this.lockMAC) {
-      this.connectionManager.peripheralStatuses[peripheral.id].appendBuffer(
-        data
-      );
-      const buffer =
-        this.connectionManager.peripheralStatuses[peripheral.id].buffer;
-      const history =
-        this.connectionManager.peripheralStatuses[peripheral.id]
-          .dataStringHistory;
+      this.peripheralBuffer[peripheral.id].appendBuffer(data);
+      const buffer = this.peripheralBuffer[peripheral.id].buffer;
+      const history = this.peripheralBuffer[peripheral.id].dataStringHistory;
       logger.info(`[${peripheral.id}] Peripheral buffer '${buffer}'`);
       logger.info(`[${peripheral.id}] Peripheral history ${history}`);
 
@@ -49,10 +62,6 @@ export class BLEEngine {
         }
       }
     }
-  }
-
-  get connectionTargetMACs() {
-    return [this.rfidMAC, this.lockMAC];
   }
 
   async initBLE() {

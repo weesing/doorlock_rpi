@@ -4,10 +4,10 @@ import logger from './logger';
 
 export class BLEEngineTest extends BLEEngine {
   constructor() {
-    super();
-
     const secrets = SecretsLoader.loadSecrets();
     this.testMAC = secrets.testMAC.toLowerCase();
+    
+    super();
   }
 
   async onDataReceived(peripheral, data, isNotification) {
