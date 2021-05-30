@@ -27,8 +27,6 @@ export class ConnectionManager {
     this.subscribedPeripheralIds = new Set();
     this.isScanning = false;
 
-    this.onDiscoverCb = this.onDiscover.bind(this);
-
     this.dataReceiver = null;
     this.onDataReceivedFn = null;
   }
@@ -183,7 +181,7 @@ export class ConnectionManager {
     this.subscribedPeripheralIds.delete(peripheralId);
   }
 
-  onDiscover(peripheral) {
+  onPeripheralDiscovered(peripheral) {
     const targetSet = new Set(this.connectionTargetMACs);
     const peripheralId = peripheral.id.toLowerCase();
     if (targetSet.has(peripheralId)) {
@@ -211,10 +209,6 @@ export class ConnectionManager {
       return;
     }
 
-    // Re-register for discover event.
-    noble.removeListener('discover', this.onDiscoverCb);
-    noble.on('discover', this.onDiscoverCb);
-
     // Start the scanning.
     noble.startScanning([], false, function (error) {
       if (error) {
@@ -226,7 +220,6 @@ export class ConnectionManager {
   }
 
   stopScanning() {
-    noble.removeListener('discover', this.onDiscoverCb);
     noble.stopScanning();
   }
 
@@ -272,6 +265,9 @@ export class ConnectionManager {
   async startConnections(dataReceiver) {
     this.dataReceiver = dataReceiver;
     this.onDataReceivedFn = dataReceiver.onDataReceived.bind(dataReceiver);
+
+    const onPeripheralDiscoveredCb = this.onPeripheralDiscovered.bind(this);
+    noble.on('discover', onPeripheralDiscoveredCb);
 
     noble.on('scanStart', async function () {
       logger.info(`Scanning started...`);
