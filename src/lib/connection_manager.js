@@ -16,10 +16,9 @@ const LOOP_FREQUENCY = 1000;
 export class ConnectionManager {
   constructor(targetMACs) {
     this.connectionTargetMACs = targetMACs;
-    this.connectionStatuses = {
-      [this.rfidMAC]: new PeripheralStatus(),
-      [this.lockMAC]: new PeripheralStatus()
-    };
+    for (const targetMAC of targetMACs) {
+      this.connectionStatuses[targetMAC] = new PeripheralStatus();
+    }
 
     this.discoveredPeripherals = {};
     this.connectedPeripheralIds = new Set();

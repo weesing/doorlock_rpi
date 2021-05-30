@@ -8,13 +8,7 @@ export class BLEEngineTest extends BLEEngine {
     super();
 
     const secrets = SecretsLoader.loadSecrets();
-
     this.testMAC = secrets.testMAC.toLowerCase();
-    this.connectionTargetMACs = [this.testMAC];
-
-    this.peripheralStatuses = {
-      [this.testMAC]: new PeripheralStatus()
-    };
   }
 
   async onDataReceived(peripheral, data, isNotification) {
