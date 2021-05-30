@@ -76,8 +76,9 @@ export class BLEEngine {
   async initBLE() {
     logger.info(`Intitializing BLE...`);
 
+    const dataReceiver = this;
     this._connectionManager = new ConnectionManager(this.connectionTargetMACs);
-    this._connectionManager.startConnections(this);
+    this._connectionManager.startConnections(dataReceiver);
   }
 
   static getInstance() {

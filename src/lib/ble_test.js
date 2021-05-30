@@ -19,7 +19,6 @@ export class BLEEngineTest extends BLEEngine {
   }
 
   async onDataReceived(peripheral, data, isNotification) {
-    super.onDataReceived(peripheral, data, isNotification);
     if (peripheral.id === this.testMAC) {
       const peripheralId = peripheral.id;
       this.peripheralBuffer[peripheralId].appendBuffer(data);
