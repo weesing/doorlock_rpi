@@ -1,9 +1,10 @@
 {
-  "name": "raspberry-node-bleslave",
+  "name": "doorlock_rpi",
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www"
+    "start": "node index.js",
+    "testmode": "node index.js testmode"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
@@ -18,7 +19,7 @@
     "pino": "^6.11.3",
     "pino-pretty": "^5.0.0"
   },
-  "description": "Install the prerequisites ========================= `sudo apt-get install bluetooth bluez libbluetooth-dev libudev-dev`",
+  "description": "",
   "main": "index.js",
   "module": "main.js",
   "devDependencies": {},
