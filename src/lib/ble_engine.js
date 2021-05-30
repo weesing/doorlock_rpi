@@ -163,7 +163,7 @@ export class BLEEngine {
         await this.subscribeToPeripheral(peripheral);
 
         if (
-          this.connectedPeripheralIds.size() < this.connectionTargetMACs.length
+          this.connectedPeripheralIds.size < this.connectionTargetMACs.length
         ) {
           // More devices to connect, continue connection.
           logger.info(`More devices pending connection, continuing scan...`);
