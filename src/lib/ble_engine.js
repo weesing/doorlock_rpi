@@ -60,6 +60,9 @@ export class BLEEngine {
   }
 
   onPeripheralSubscribed(peripheral, characteristic) {
+    logger.info(
+      `[${peripheral.id}] >>>> Subscribed to ${characteristic.uuid} on peripheral <<<<`
+    );
     this.subscribedPeripheralIds.add(peripheral.id);
     this.peripheralStatuses[peripheral.id].bulkSet({
       status: PERIPHERAL_STATE_SUBSCRIBED,
@@ -68,7 +71,6 @@ export class BLEEngine {
     });
     const buffer = Buffer.from(this.meMAC);
     characteristic.write(buffer);
-    this.nextSubscriptionTimeout = null;
   }
 
   async subscribeToPeripheral(peripheral) {
@@ -124,9 +126,6 @@ export class BLEEngine {
           if (error) {
             logger.info(util.inspect(error, { depth: 10, colors: true }));
           } else {
-            logger.info(
-              `[${peripheral.id}] >>>> Subscribed to ${characteristic.uuid} on peripheral <<<<`
-            );
             subscribeSuccessfulCb(peripheral, characteristic);
           }
         });
@@ -148,7 +147,7 @@ export class BLEEngine {
     const onPeripheralConnected = async (peripheral) => {
       logger.info(`[${peripheral.id}] >>>> Peripheral CONNECTED <<<<`);
       logger.info(
-        `[${peripheral.id}] >>>> Initiate service and characteristics discovery and subscription. <<<<`
+        `[${peripheral.id}] Initiate service and characteristics discovery and subscription.`
       );
 
       logger.info(
