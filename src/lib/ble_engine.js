@@ -151,23 +151,27 @@ export class BLEEngine {
 
       this.connectedPeripheralIds.add(peripheralId);
 
-      logger.info(
-        `[${peripheralId}] Initiate service and characteristics discovery and subscription.`
-      );
+      process.nextTick(async () => {
+        logger.info(
+          `[${peripheralId}] Initiate service and characteristics discovery and subscription.`
+        );
 
-      logger.info(
-        `[${peripheralId}] Discovering services and characteristics...`
-      );
+        logger.info(
+          `[${peripheralId}] Discovering services and characteristics...`
+        );
 
-      await this.subscribeToPeripheral(peripheral);
+        await this.subscribeToPeripheral(peripheral);
 
-      if (
-        this.connectedPeripheralIds.size() < this.connectionTargetMACs.length
-      ) {
-        // More devices to connect, continue connection.
-        logger.info(`More devices pending connection, continuing scan...`);
-        await this.restartScanning();
-      }
+        if (
+          this.connectedPeripheralIds.size() < this.connectionTargetMACs.length
+        ) {
+          // More devices to connect, continue connection.
+          logger.info(`More devices pending connection, continuing scan...`);
+          await this.restartScanning();
+        } else {
+          logger.info(`All devices connected, not restarting scan`);
+        }
+      });
     };
 
     // Init callback for peripheral disconnected
