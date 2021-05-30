@@ -2,6 +2,7 @@ import util from 'util';
 import _ from 'lodash';
 import noble from 'noble';
 import logger from './logger';
+import config from './config';
 
 import {
   PERIPHERAL_STATE_DISCONNECTED,
@@ -58,9 +59,14 @@ export class ConnectionManager {
 
     const subscribeSuccessfulCb = this.onPeripheralSubscribed.bind(this);
     const onDataReceivedFn = this.onDataReceivedFn;
+    const serviceUuid = _.get(config, 'connection_manager.service_uuid');
+    const characteristicUuid = _.get(
+      config,
+      'connection_manager.characteristic_uuid'
+    );
     peripheral.discoverSomeServicesAndCharacteristics(
-      ['ffe0'],
-      ['ffe1'],
+      [serviceUuid],
+      [characteristicUuid],
       function (error, services, characteristics) {
         logger.info(
           `[${peripheral.id}] Discovered services and characteristics for ${peripheral.id}`
