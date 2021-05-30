@@ -301,12 +301,13 @@ export class BLEEngine {
 
     this.onDiscoverCb = this.onDiscover.bind(this);
 
-    noble.on('scanStart', function () {
+    noble.on('scanStart', async function () {
       logger.info(`Scanning started...`);
     });
 
-    noble.on('scanStop', function () {
-      logger.info(`Scanning stopped.`);
+    noble.on('scanStop', async function () {
+      logger.warn(`Scanning stopped.`);
+      await this.startScanning();
     });
 
     await this.disconnectAllDevices();
