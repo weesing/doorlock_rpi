@@ -46,7 +46,7 @@ export class ConnectionManager {
       peripheral,
       characteristic: characteristic
     });
-    const buffer = Buffer.from('connected');
+    const buffer = Buffer.from('echo');
     characteristic.write(buffer);
   }
 
