@@ -1,4 +1,4 @@
-import { BLELib } from './ble';
+import { BLEEngine } from './ble_engine';
 import { SecretsLoader } from './secrets_loader';
 import logger from './logger';
 import {
@@ -7,7 +7,7 @@ import {
 } from '../peripheral/peripheral_status';
 import { APP_STATE_INIT, APP_STATE_IDLE } from './app_state';
 
-export class BLELibTest extends BLELib {
+export class BLELibTest extends BLEEngine {
   constructor() {
     super();
 
@@ -23,12 +23,12 @@ export class BLELibTest extends BLELib {
 
   async onDataReceived(peripheral, data, isNotification) {
     super.onDataReceived(peripheral, data, isNotification);
-
+console.log(peripheral.id + ' VS ' + this.testMAC);
     if (peripheral.id === this.testMAC) {
       this.peripheralStatuses[peripheral.id].appendBuffer(data);
       const buffer = this.peripheralStatuses[peripheral.id].buffer;
       const history = this.peripheralStatuses[peripheral.id].dataStringHistory;
-      logger.info(`[${peripheral.id}] Peripheral buffer - ${buffer}`);
+      logger.info(`[${peripheral.id}] Peripheral buffer - '${buffer}'`);
       logger.info(`[${peripheral.id}] Peripheral history - ${history}`);
 
       switch (peripheral.id) {
@@ -37,28 +37,5 @@ export class BLELibTest extends BLELib {
         }
       }
     }
-  }
-
-  async loop() {
-    switch (this.state) {
-      case APP_STATE_IDLE: {
-        const testStatus = this.peripheralStatuses[this.testMAC];
-        if (testStatus) {
-          // Test code.
-          const needReinit =
-            testStatus.status === PERIPHERAL_STATE_DISCONNECTED;
-          if (needReinit) {
-            logger.info(`Test status: ${testStatus.status}`);
-            logger.info(
-              `Detected disconnection, resetting all connections on next loop.`
-            );
-            this.state = APP_STATE_INIT;
-          }
-        }
-        break;
-      }
-    }
-
-    super.loop();
   }
 }

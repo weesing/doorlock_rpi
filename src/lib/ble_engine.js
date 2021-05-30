@@ -18,10 +18,11 @@ export class BLEEngine {
     const secrets = SecretsLoader.loadSecrets();
     logger.info(secrets);
 
-    this.testMAC = secrets.testMAC.toLowerCase();
+    this.rfidMAC = secrets.rfidMAC.toLowerCase();
+    this.lockMAC = secrets.lockMAC.toLowerCase();
     this.meMAC = secrets.nodeMAC.toLowerCase();
     
-    this.connectionTargetMACs = [this.testMAC];
+    this.connectionTargetMACs = [this.rfidMAC, this.lockMAC];
 
     this.peripheralStatuses = {
       [this.testMAC]: new PeripheralStatus()
@@ -38,7 +39,7 @@ export class BLEEngine {
       this.peripheralStatuses[peripheral.id].appendBuffer(data);
       const buffer = this.peripheralStatuses[peripheral.id].buffer;
       const history = this.peripheralStatuses[peripheral.id].dataStringHistory;
-      logger.info(`[${peripheral.id}] Peripheral buffer ${buffer}`);
+      logger.info(`[${peripheral.id}] Peripheral buffer '${buffer}'`);
       logger.info(`[${peripheral.id}] Peripheral history ${history}`);
 
       switch (peripheral.id) {
