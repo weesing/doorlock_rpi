@@ -6,14 +6,10 @@ import { PeripheralBuffer } from '../peripheral/peripheral_buffer';
 
 export class BLEEngine {
   constructor() {
-    const secrets = SecretsLoader.loadSecrets();
-    logger.info(secrets);
-
-    this.rfidMAC = secrets.rfidMAC.toLowerCase();
-    this.lockMAC = secrets.lockMAC.toLowerCase();
-    this.meMAC = secrets.nodeMAC.toLowerCase();
-
     this._connectionManager = null;
+
+    // initialize all the peripheral MAC addresses.
+    this.initPeripheralMACs();
 
     // initialize all peripheral buffers
     this.initBuffer();
@@ -27,9 +23,20 @@ export class BLEEngine {
     return this._connectionManager;
   }
 
+  initPeripheralMACs() {
+    const secrets = SecretsLoader.loadSecrets();
+    logger.info(secrets);
+
+    this.rfidMAC = secrets.rfidMAC.toLowerCase();
+    this.lockMAC = secrets.lockMAC.toLowerCase();
+    this.meMAC = secrets.nodeMAC.toLowerCase();
+  }
+
   initBuffer() {
     for (const deviceMAC of this.connectionTargetMACs) {
-      this.peripheralBuffer[deviceMAC] = new PeripheralBuffer();
+      if (deviceMAC !== undefined) {
+        this.peripheralBuffer[deviceMAC] = new PeripheralBuffer();
+      }
     }
   }
 

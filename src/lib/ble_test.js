@@ -4,10 +4,18 @@ import logger from './logger';
 
 export class BLEEngineTest extends BLEEngine {
   constructor() {
-    const secrets = SecretsLoader.loadSecrets();
-    this.testMAC = secrets.testMAC.toLowerCase();
-    
     super();
+  }
+
+  initPeripheralMACs() {
+    super.initPeripheralMACs();
+    const secrets = SecretsLoader.loadSecrets();
+    logger.info(secrets);
+    this.testMAC = secrets.testMAC.toLowerCase();
+  }
+
+  get connectionTargetMACs() {
+    return [this.testMAC];
   }
 
   async onDataReceived(peripheral, data, isNotification) {
@@ -30,9 +38,5 @@ export class BLEEngineTest extends BLEEngine {
         }
       }
     }
-  }
-
-  get connectionTargetMACs() {
-    return [this.testMAC];
   }
 }
