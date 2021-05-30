@@ -307,7 +307,6 @@ export class BLEEngine {
 
     noble.on('scanStop', async function () {
       logger.warn(`Scanning stopped.`);
-      await this.startScanning();
     });
 
     await this.disconnectAllDevices();
