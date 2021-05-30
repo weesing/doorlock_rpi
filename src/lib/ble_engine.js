@@ -25,7 +25,8 @@ export class BLEEngine {
     this.connectionTargetMACs = [this.rfidMAC, this.lockMAC];
 
     this.peripheralStatuses = {
-      [this.testMAC]: new PeripheralStatus()
+      [this.rfidMAC]: new PeripheralStatus(),
+      [this.lockMAC]: new PeripheralStatus(),
     };
 
     this.discoveredPeripherals = {};
