@@ -16,6 +16,7 @@ const LOOP_FREQUENCY = 1000;
 export class ConnectionManager {
   constructor(targetMACs) {
     this.connectionTargetMACs = targetMACs;
+    this.connectionStatuses = {};
     for (const targetMAC of targetMACs) {
       this.connectionStatuses[targetMAC] = new PeripheralStatus();
     }
@@ -29,7 +30,7 @@ export class ConnectionManager {
   }
 
   get peripheralStatuses() {
-    return this.peripheralStatuses;
+    return this.connectionStatuses;
   }
 
   onPeripheralSubscribed(peripheral, characteristic) {
@@ -276,7 +277,7 @@ export class ConnectionManager {
     }
   }
 
-  async startConnection(dataReceiverClazz) {
+  async startConnections(dataReceiverClazz) {
     this.dataReceiver = new dataReceiverClazz();
     this.onDataReceivedFn = this.dataReceiver.onDataReceived.bind(this);
 
@@ -289,9 +290,6 @@ export class ConnectionManager {
       logger.warn(`Scanning stopped.`);
       this.isScanning = false;
     });
-
-    await this.disconnectAllDevices();
-    await this.stopScanning();
 
     // Start the scan
     await this.startScanning();
