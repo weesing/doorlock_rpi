@@ -1,6 +1,7 @@
 import { BLEEngineTest } from '../lib/ble_test';
 import { BLEEngine } from '../lib/ble_engine';
 import config from '../lib/config';
+import logger from '../lib/logger';
 
 var boot = async function (testMode = false) {
   logger.info(`Configuration loaded`);
