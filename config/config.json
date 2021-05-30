@@ -1,2 +1,8 @@
 {
+  "connection_manager": {
+    "discover": {
+      "service_uuid": "ffe0",
+      "characteristic_uuid": "ffe1"
+    }
+  }
 }
