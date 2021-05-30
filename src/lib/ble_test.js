@@ -21,18 +21,14 @@ export class BLEEngineTest extends BLEEngine {
   async onDataReceived(peripheral, data, isNotification) {
     super.onDataReceived(peripheral, data, isNotification);
     if (peripheral.id === this.testMAC) {
-      this.connectionManager.peripheralStatuses[peripheral.id].appendBuffer(
-        data
-      );
-      const buffer =
-        this.connectionManager.peripheralStatuses[peripheral.id].buffer;
-      const history =
-        this.connectionManager.peripheralStatuses[peripheral.id]
-          .dataStringHistory;
-      logger.info(`[${peripheral.id}] Peripheral buffer - '${buffer}'`);
-      logger.info(`[${peripheral.id}] Peripheral history - ${history}`);
+      const peripheralId = peripheral.id;
+      this.peripheralBuffer[peripheralId].appendBuffer(data);
+      const buffer = this.peripheralBuffer[peripheralId].buffer;
+      const history = this.peripheralBuffer[peripheralId].dataStringHistory;
+      logger.info(`[${peripheralId}] Peripheral buffer - '${buffer}'`);
+      logger.info(`[${peripheralId}] Peripheral history - ${history}`);
 
-      switch (peripheral.id) {
+      switch (peripheralId) {
         case this.testMAC: {
           break;
         }
