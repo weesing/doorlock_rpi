@@ -10,7 +10,6 @@ import {
   PERIPHERAL_STATE_SUBSCRIBED,
   PeripheralStatus
 } from '../peripheral/peripheral_status';
-import { PeripheralStatus } from '../peripheral/peripheral_status';
 
 const LOOP_FREQUENCY = 1000;
 
