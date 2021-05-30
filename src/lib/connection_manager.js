@@ -59,11 +59,9 @@ export class ConnectionManager {
 
     const subscribeSuccessfulCb = this.onPeripheralSubscribed.bind(this);
     const onDataReceivedFn = this.onDataReceivedFn;
-    const serviceUuid = _.get(config, 'connection_manager.discover.service_uuid');
-    const characteristicUuid = _.get(
-      config,
-      'connection_manager.discover.characteristic_uuid'
-    );
+    const discoverConfig = _.get(config, `connection_manager.discover`);
+    const serviceUuid = _.get(discoverConfig, 'service_uuid');
+    const characteristicUuid = _.get(discoverConfig, 'characteristic_uuid');
     peripheral.discoverSomeServicesAndCharacteristics(
       [serviceUuid],
       [characteristicUuid],
