@@ -57,60 +57,43 @@ export class ConnectionManager {
       peripheral
     });
 
-    const subscribeSuccessfulCb = this.onPeripheralSubscribed.bind(this);
-    const onDataReceivedFn = this.onDataReceivedFn;
+    const onSvcCharDiscoverCb = (error, services, characteristics) => {
+      logger.info(
+        `[${peripheral.id}] Discovered services and characteristics for ${peripheral.id}`
+      );
+      if (error) {
+        this.disconnectPeripheral(peripheral);
+        return;
+      }
+
+      let characteristic = characteristics[0];
+      logger.info(
+        `[${peripheral.id}] Subscribing to characteristics ${characteristic.uuid}`
+      );
+      characteristic.on('data', (data, isNotification) => {
+        logger.info(
+          `[${peripheral.id}] Received buffer -> ${util.inspect(data, {
+            depth: 10,
+            colors: true
+          })} (${data.toString()})`
+        );
+        this.onDataReceivedFn(peripheral, data, isNotification);
+      });
+      characteristic.subscribe((error) => {
+        if (error) {
+          logger.info(util.inspect(error, { depth: 10, colors: true }));
+        } else {
+          this.onPeripheralSubscribed(peripheral, characteristic);
+        }
+      });
+    };
     const discoverConfig = _.get(config, `connection_manager.discover`);
     const serviceUuid = _.get(discoverConfig, 'service_uuid');
     const characteristicUuid = _.get(discoverConfig, 'characteristic_uuid');
     peripheral.discoverSomeServicesAndCharacteristics(
       [serviceUuid],
       [characteristicUuid],
-      function (error, services, characteristics) {
-        logger.info(
-          `[${peripheral.id}] Discovered services and characteristics for ${peripheral.id}`
-        );
-
-        const servicesLog = services.map((service) =>
-          _.pick(service, ['_peripheralId', 'uuid'])
-        );
-        const charLog = characteristics.map((char) =>
-          _.pick(char, ['uuid', 'name', 'type', 'properties'])
-        );
-        logger.info(`[${peripheral.id}] Errors: ${error ? error : 'none'}`);
-        logger.info(
-          `[${peripheral.id}] Services: ${util.inspect(servicesLog, {
-            depth: 10,
-            colors: true
-          })}`
-        );
-        logger.info(
-          `[${peripheral.id}] Characteristics: ${util.inspect(charLog, {
-            depth: 10,
-            colors: true
-          })}`
-        );
-
-        let characteristic = characteristics[0];
-        logger.info(
-          `[${peripheral.id}] Subscribing to characteristics ${characteristic.uuid}`
-        );
-        characteristic.on('data', (data, isNotification) => {
-          logger.info(
-            `[${peripheral.id}] Received buffer -> ${util.inspect(data, {
-              depth: 10,
-              colors: true
-            })} (${data.toString()})`
-          );
-          onDataReceivedFn(peripheral, data, isNotification);
-        });
-        characteristic.subscribe(function (error) {
-          if (error) {
-            logger.info(util.inspect(error, { depth: 10, colors: true }));
-          } else {
-            subscribeSuccessfulCb(peripheral, characteristic);
-          }
-        });
-      }
+      onSvcCharDiscoverCb
     );
   }
 
@@ -184,6 +167,22 @@ export class ConnectionManager {
     });
   }
 
+  async disconnectPeripheral(peripheral) {
+    const peripheralId = peripheral.id;
+    logger.info(`[${peripheralId}] Disconnecting peripheral`);
+    try {
+      peripheral.disconnect();
+    } catch (e) {
+      logger.error(`[${peripheralId}] Error disconnecting from peripheral.`);
+      logger.error(e);
+    }
+    this.peripheralStatuses[peripheralId].reset();
+    this.dataReceiver.clearBufferByPeripheral(peripheralId);
+    // clear from connected and subscribed list.
+    this.connectedPeripheralIds.delete(peripheralId);
+    this.subscribedPeripheralIds.delete(peripheralId);
+  }
+
   onDiscover(peripheral) {
     const targetSet = new Set(this.connectionTargetMACs);
     const peripheralId = peripheral.id.toLowerCase();
@@ -234,22 +233,6 @@ export class ConnectionManager {
   restartScanning() {
     this.stopScanning();
     this.startScanning();
-  }
-
-  async disconnectPeripheral(peripheral) {
-    const peripheralId = peripheral.id;
-    logger.info(`[${peripheralId}] Disconnecting peripheral`);
-    try {
-      peripheral.disconnect();
-    } catch (e) {
-      logger.error(`[${peripheralId}] Error disconnecting from peripheral.`);
-      logger.error(e);
-    }
-    this.peripheralStatuses[peripheralId].reset();
-    this.dataReceiver.clearBufferByPeripheral(peripheralId);
-    // clear from connected and subscribed list.
-    this.connectedPeripheralIds.delete(peripheralId);
-    this.subscribedPeripheralIds.delete(peripheralId);
   }
 
   async loop() {
