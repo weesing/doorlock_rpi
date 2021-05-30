@@ -27,6 +27,7 @@ export class ConnectionManager {
     this.isScanning = false;
 
     this.onDiscoverCb = this.onDiscover.bind(this);
+    this.onDataReceivedFn = null;
   }
 
   get peripheralStatuses() {
@@ -43,7 +44,7 @@ export class ConnectionManager {
       peripheral,
       characteristic: characteristic
     });
-    const buffer = Buffer.from(this.meMAC);
+    const buffer = Buffer.from('connected');
     characteristic.write(buffer);
   }
 
@@ -54,6 +55,7 @@ export class ConnectionManager {
     });
 
     const subscribeSuccessfulCb = this.onPeripheralSubscribed.bind(this);
+    const onDataReceivedFn = this.onDataReceivedFn;
     peripheral.discoverSomeServicesAndCharacteristics(
       ['ffe0'],
       ['ffe1'],
@@ -93,7 +95,7 @@ export class ConnectionManager {
               colors: true
             })} (${data.toString()})`
           );
-          this.onDataReceivedFn(peripheral, data, isNotification);
+          onDataReceivedFn(peripheral, data, isNotification);
         });
         characteristic.subscribe(function (error) {
           if (error) {
@@ -277,9 +279,8 @@ export class ConnectionManager {
     }
   }
 
-  async startConnections(dataReceiverClazz) {
-    this.dataReceiver = new dataReceiverClazz();
-    this.onDataReceivedFn = this.dataReceiver.onDataReceived.bind(this);
+  async startConnections(dataReceiver) {
+    this.onDataReceivedFn = dataReceiver.onDataReceived.bind(dataReceiver);
 
     noble.on('scanStart', async function () {
       logger.info(`Scanning started...`);

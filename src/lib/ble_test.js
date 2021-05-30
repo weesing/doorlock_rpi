@@ -1,7 +1,6 @@
 import { BLEEngine } from './ble_engine';
 import { SecretsLoader } from './secrets_loader';
 import logger from './logger';
-import { PeripheralStatus } from '../peripheral/peripheral_status';
 
 export class BLEEngineTest extends BLEEngine {
   constructor() {
@@ -14,9 +13,9 @@ export class BLEEngineTest extends BLEEngine {
   async onDataReceived(peripheral, data, isNotification) {
     super.onDataReceived(peripheral, data, isNotification);
     if (peripheral.id === this.testMAC) {
-      this.peripheralStatuses[peripheral.id].appendBuffer(data);
-      const buffer = this.peripheralStatuses[peripheral.id].buffer;
-      const history = this.peripheralStatuses[peripheral.id].dataStringHistory;
+      this.connectionManager.peripheralStatuses[peripheral.id].appendBuffer(data);
+      const buffer = this.connectionManager.peripheralStatuses[peripheral.id].buffer;
+      const history = this.connectionManager.peripheralStatuses[peripheral.id].dataStringHistory;
       logger.info(`[${peripheral.id}] Peripheral buffer - '${buffer}'`);
       logger.info(`[${peripheral.id}] Peripheral history - ${history}`);
 
@@ -26,10 +25,6 @@ export class BLEEngineTest extends BLEEngine {
         }
       }
     }
-  }
-
-  get dataReceiverClass() {
-    return BLEEngineTest;
   }
 
   get connectionTargetMACs() {

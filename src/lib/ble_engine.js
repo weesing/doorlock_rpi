@@ -12,7 +12,11 @@ export class BLEEngine {
     this.lockMAC = secrets.lockMAC.toLowerCase();
     this.meMAC = secrets.nodeMAC.toLowerCase();
 
-    this.connectionManager = null;
+    this._connectionManager = null;
+  }
+
+  get connectionManager() {
+    return this._connectionManager;
   }
 
   async onDataReceived(peripheral, data, isNotification) {
@@ -47,10 +51,6 @@ export class BLEEngine {
     }
   }
 
-  get dataReceiverClass() {
-    return BLEEngine;
-  }
-
   get connectionTargetMACs() {
     return [this.rfidMAC, this.lockMAC];
   }
@@ -58,8 +58,8 @@ export class BLEEngine {
   async initBLE() {
     logger.info(`Intitializing BLE...`);
 
-    this.connectionManager = new ConnectionManager(this.connectionTargetMACs);
-    this.connectionManager.startConnections(this.dataReceiverClass);
+    this._connectionManager = new ConnectionManager(this.connectionTargetMACs);
+    this._connectionManager.startConnections(this);
   }
 
   static getInstance() {
