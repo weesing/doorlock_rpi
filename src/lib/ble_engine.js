@@ -21,7 +21,7 @@ export class BLEEngine {
     this.rfidMAC = secrets.rfidMAC.toLowerCase();
     this.lockMAC = secrets.lockMAC.toLowerCase();
     this.meMAC = secrets.nodeMAC.toLowerCase();
-    
+
     this.connectionTargetMACs = [this.rfidMAC, this.lockMAC];
 
     this.peripheralStatuses = {
@@ -146,22 +146,35 @@ export class BLEEngine {
 
     // Init callback for peripheral connected
     const onPeripheralConnected = async (peripheral) => {
-      logger.info(`[${peripheral.id}] >>>> Peripheral CONNECTED <<<<`);
+      const peripheralId = peripheral.id;
+      logger.info(`[${peripheralId}] >>>> Peripheral CONNECTED <<<<`);
+
+      this.connectedPeripheralIds.add(peripheralId);
+
       logger.info(
-        `[${peripheral.id}] Initiate service and characteristics discovery and subscription.`
+        `[${peripheralId}] Initiate service and characteristics discovery and subscription.`
       );
 
       logger.info(
-        `[${peripheral.id}] Discovering services and characteristics...`
+        `[${peripheralId}] Discovering services and characteristics...`
       );
 
       await this.subscribeToPeripheral(peripheral);
+
+      if (
+        this.connectedPeripheralIds.size() < this.connectionTargetMACs.length
+      ) {
+        // More devices to connect, continue connection.
+        logger.info(`More devices pending connection, continuing scan...`);
+        await this.restartScanning();
+      }
     };
 
     // Init callback for peripheral disconnected
     const onPeripheralDisconnect = async (peripheral) => {
       logger.warn(`[${peripheral.id}] >>>> Peripheral DISCONNECTED <<<<`);
       this.disconnectPeripheral(peripheral);
+      await this.restartScanning();
     };
 
     peripheral.once('connect', async function () {
@@ -293,6 +306,11 @@ export class BLEEngine {
   async stopScanning() {
     noble.removeListener('discover', this.onDiscoverCb);
     noble.stopScanning();
+  }
+
+  async restartScanning() {
+    await this.stopScanning();
+    await this.startScanning();
   }
 
   async initBLE() {
