@@ -33,6 +33,7 @@ export class BLEEngine {
   }
 
   initBuffer() {
+    this.peripheralBuffer = {};
     for (const deviceMAC of this.connectionTargetMACs) {
       if (deviceMAC !== undefined) {
         this.peripheralBuffer[deviceMAC] = new PeripheralBuffer();
