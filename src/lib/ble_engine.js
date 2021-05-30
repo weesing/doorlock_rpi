@@ -159,7 +159,7 @@ export class BLEEngine {
 
     // Init callback for peripheral disconnected
     const onPeripheralDisconnect = async (peripheral) => {
-      logger.warn(`[${peripheral.id}] Peripheral DISCONNECTED`);
+      logger.warn(`[${peripheral.id}] >>>> Peripheral DISCONNECTED <<<<`);
       this.disconnectPeripheral(peripheral);
     };
 
@@ -187,7 +187,7 @@ export class BLEEngine {
   }
 
   async disconnectPeripheral(peripheral) {
-    const peripheralId = peripiheral.id;
+    const peripheralId = peripheral.id;
     logger.info(`[${peripheralId}] Disconnecting peripheral`);
     try {
       peripheral.disconnect();
