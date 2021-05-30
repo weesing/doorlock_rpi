@@ -199,7 +199,7 @@ export class ConnectionManager {
         )}`
       );
     } else {
-      logger.info(
+      logger.debug(
         `Found unknown device ${util.inspect(
           _.pick(peripheral, ['id', 'address']),
           { depth: 10, colors: true }
