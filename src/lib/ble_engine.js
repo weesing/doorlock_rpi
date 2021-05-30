@@ -275,7 +275,6 @@ export class BLEEngine {
       logger.info('Already scanning');
       return;
     }
-    this.isScanning = true;
 
     // Re-register for discover event.
     noble.removeListener('discover', this.onDiscoverCb);
@@ -294,7 +293,6 @@ export class BLEEngine {
   async stopScanning() {
     noble.removeListener('discover', this.onDiscoverCb);
     noble.stopScanning();
-    this.isScanning = false;
   }
 
   async initBLE() {
@@ -304,10 +302,12 @@ export class BLEEngine {
 
     noble.on('scanStart', async function () {
       logger.info(`Scanning started...`);
+      this.isScanning = true;
     });
 
     noble.on('scanStop', async function () {
       logger.warn(`Scanning stopped.`);
+      this.isScanning = false;
     });
 
     await this.disconnectAllDevices();
