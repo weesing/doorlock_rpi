@@ -1,5 +1,5 @@
-import { BLELib } from '../lib/ble';
-import { BLELibTest } from '../lib/ble_test';
+import { BLEEngineTest } from '../lib/ble_test';
+import { BLEEngine } from '../lib/ble_engine';
 import logger from '../lib/logger';
 
 var boot = async function (testMode = false) {
@@ -10,9 +10,9 @@ var boot = async function (testMode = false) {
 
   if (testMode) {
     logger.warn(`Running in test mode.`);
-    await BLELibTest.getInstance().initBLE();
+    await BLEEngineTest.getInstance().initBLE();
   } else {
-    await BLELib.getInstance().initBLE();
+    await BLEEngine.getInstance().initBLE();
   }
 };
 
