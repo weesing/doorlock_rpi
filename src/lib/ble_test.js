@@ -19,7 +19,6 @@ export class BLEEngineTest extends BLEEngine {
 
   async onDataReceived(peripheral, data, isNotification) {
     super.onDataReceived(peripheral, data, isNotification);
-    console.log(peripheral.id + ' VS ' + this.testMAC);
     if (peripheral.id === this.testMAC) {
       this.peripheralStatuses[peripheral.id].appendBuffer(data);
       const buffer = this.peripheralStatuses[peripheral.id].buffer;
@@ -33,5 +32,13 @@ export class BLEEngineTest extends BLEEngine {
         }
       }
     }
+  }
+
+  get dataReceiverClass() {
+    return BLEEngineTest;
+  }
+
+  get connectionTargetMACs() {
+    return [this.testMAC];
   }
 }
