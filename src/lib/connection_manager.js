@@ -2,6 +2,7 @@ import util from 'util';
 import _ from 'lodash';
 import noble from 'noble';
 import logger from './logger';
+import config from './config';
 
 import {
   PERIPHERAL_STATE_DISCONNECTED,
@@ -58,9 +59,12 @@ export class ConnectionManager {
 
     const subscribeSuccessfulCb = this.onPeripheralSubscribed.bind(this);
     const onDataReceivedFn = this.onDataReceivedFn;
+    const discoverConfig = _.get(config, `connection_manager.discover`);
+    const serviceUuid = _.get(discoverConfig, 'service_uuid');
+    const characteristicUuid = _.get(discoverConfig, 'characteristic_uuid');
     peripheral.discoverSomeServicesAndCharacteristics(
-      ['ffe0'],
-      ['ffe1'],
+      [serviceUuid],
+      [characteristicUuid],
       function (error, services, characteristics) {
         logger.info(
           `[${peripheral.id}] Discovered services and characteristics for ${peripheral.id}`
@@ -143,7 +147,7 @@ export class ConnectionManager {
         ) {
           // More devices to connect, continue connection.
           logger.info(`More devices pending connection, continuing scan...`);
-          await this.restartScanning();
+          this.restartScanning();
         } else {
           logger.info(`All devices connected, not restarting scan`);
         }
@@ -154,7 +158,7 @@ export class ConnectionManager {
     const onPeripheralDisconnect = async (peripheral) => {
       logger.warn(`[${peripheral.id}] >>>> Peripheral DISCONNECTED <<<<`);
       this.disconnectPeripheral(peripheral);
-      await this.restartScanning();
+      this.restartScanning();
     };
 
     peripheral.once('connect', async function () {
@@ -193,7 +197,7 @@ export class ConnectionManager {
         )}`
       );
     } else {
-      logger.info(
+      logger.debug(
         `Found unknown device ${util.inspect(
           _.pick(peripheral, ['id', 'address']),
           { depth: 10, colors: true }
@@ -202,7 +206,7 @@ export class ConnectionManager {
     }
   }
 
-  async startScanning() {
+  startScanning() {
     if (this.isScanning) {
       logger.info('Already scanning');
       return;
@@ -222,14 +226,14 @@ export class ConnectionManager {
     });
   }
 
-  async stopScanning() {
+  stopScanning() {
     noble.removeListener('discover', this.onDiscoverCb);
     noble.stopScanning();
   }
 
-  async restartScanning() {
-    await this.stopScanning();
-    await this.startScanning();
+  restartScanning() {
+    this.stopScanning();
+    this.startScanning();
   }
 
   async disconnectPeripheral(peripheral) {
@@ -297,7 +301,7 @@ export class ConnectionManager {
     });
 
     // Start the scan
-    await this.startScanning();
+    this.startScanning();
 
     // Start the loop
     const loopFn = this.loop.bind(this);
