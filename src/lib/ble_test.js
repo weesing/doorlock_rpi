@@ -1,13 +1,9 @@
 import { BLEEngine } from './ble_engine';
 import { SecretsLoader } from './secrets_loader';
 import logger from './logger';
-import {
-  PERIPHERAL_STATE_DISCONNECTED,
-  PeripheralStatus
-} from '../peripheral/peripheral_status';
-import { APP_STATE_INIT, APP_STATE_IDLE } from './app_state';
+import { PeripheralStatus } from '../peripheral/peripheral_status';
 
-export class BLELibTest extends BLEEngine {
+export class BLEEngineTest extends BLEEngine {
   constructor() {
     super();
 
@@ -23,7 +19,7 @@ export class BLELibTest extends BLEEngine {
 
   async onDataReceived(peripheral, data, isNotification) {
     super.onDataReceived(peripheral, data, isNotification);
-console.log(peripheral.id + ' VS ' + this.testMAC);
+    console.log(peripheral.id + ' VS ' + this.testMAC);
     if (peripheral.id === this.testMAC) {
       this.peripheralStatuses[peripheral.id].appendBuffer(data);
       const buffer = this.peripheralStatuses[peripheral.id].buffer;

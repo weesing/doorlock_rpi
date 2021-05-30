@@ -313,7 +313,7 @@ export class BLEEngine {
     await this.disconnectAllDevices();
     await this.stopScanning();
 
-    // Start the scan and go to next state APP_STATE_SCANNING
+    // Start the scan
     await this.startScanning();
 
     // Start the loop
