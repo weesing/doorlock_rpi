@@ -1,8 +1,8 @@
 import util from 'util';
 import _ from 'lodash';
 import noble from 'noble';
-import logger from './logger';
-import config from './config';
+import logger from '../lib/logger';
+import config from '../lib/config';
 
 import {
   PERIPHERAL_STATE_DISCONNECTED,

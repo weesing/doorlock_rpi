@@ -1,18 +1,15 @@
 import _ from 'lodash';
-import logger from './logger';
-import { SecretsLoader } from './secrets_loader';
+import logger from '../lib/logger';
+import { SecretsLoader } from '../lib/secrets_loader';
 import { ConnectionManager } from './connection_manager';
-import { PeripheralBuffer } from '../peripheral/peripheral_buffer';
+import { DataReceiver } from './data_receiver';
 
-export class BLEEngine {
+export class BLEEngine extends DataReceiver {
   constructor() {
     this._connectionManager = null;
 
     // initialize all the peripheral MAC addresses.
     this.initPeripheralMACs();
-
-    // initialize all peripheral buffers
-    this.initBuffer();
   }
 
   get connectionTargetMACs() {
@@ -32,28 +29,10 @@ export class BLEEngine {
     this.meMAC = secrets.nodeMAC.toLowerCase();
   }
 
-  initBuffer() {
-    this.peripheralBuffer = {};
-    for (const deviceMAC of this.connectionTargetMACs) {
-      if (deviceMAC !== undefined) {
-        this.peripheralBuffer[deviceMAC] = new PeripheralBuffer();
-      }
-    }
-  }
-
-  clearBufferByPeripheral(peripheralId) {
-    this.peripheralBuffer[peripheralId].clearBuffer();
-  }
-
   async onDataReceived(peripheral, data, isNotification) {
-    if (peripheral.id === this.rfidMAC || peripheral.id === this.lockMAC) {
-      const peripheralId = peripheral.id;
-      this.peripheralBuffer[peripheralId].appendBuffer(data);
-      const buffer = this.peripheralBuffer[peripheralId].buffer;
-      const history = this.peripheralBuffer[peripheralId].dataStringHistory;
-      logger.info(`[${peripheralId}] Peripheral buffer '${buffer}'`);
-      logger.info(`[${peripheralId}] Peripheral history ${history}`);
-
+    super.onDataReceived(peripheral, data, isNotification);
+    const peripheralId = peripheral.id;
+    if (peripheralId === this.rfidMAC || peripheralId === this.lockMAC) {
       switch (peripheralId) {
         case this.rfidMAC: {
           const lockCharacteristic =
@@ -67,6 +46,7 @@ export class BLEEngine {
           break;
         }
         case this.lockMAC: {
+          // Do nothing.
           break;
         }
       }

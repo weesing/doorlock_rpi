@@ -1,5 +1,5 @@
-import { BLEEngineTest } from '../lib/ble_test';
-import { BLEEngine } from '../lib/ble_engine';
+import { BLEEngineTest } from '../logic/ble_engine_test';
+import { BLEEngine } from '../logic/ble_engine';
 import config from '../lib/config';
 import logger from '../lib/logger';
 
