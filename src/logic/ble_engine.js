@@ -12,6 +12,9 @@ export class BLEEngine extends DataReceiver {
 
     // initialize all the peripheral MAC addresses.
     this.initPeripheralMACs();
+
+    // initialize the buffers
+    this.initBuffer(this.connectionTargetMACs);
   }
 
   get connectionTargetMACs() {
@@ -59,7 +62,6 @@ export class BLEEngine extends DataReceiver {
     logger.info(`Intitializing BLE...`);
 
     const dataReceiver = this;
-    dataReceiver.initBuffer(this.connectionTargetMACs);
     this._connectionManager = new ConnectionManager(this.connectionTargetMACs);
     this._connectionManager.startConnections(dataReceiver);
   }
