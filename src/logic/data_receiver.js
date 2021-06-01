@@ -2,10 +2,6 @@ import { PeripheralBuffer } from '../peripheral/peripheral_buffer';
 import logger from '../lib/logger';
 
 export class DataReceiver {
-  constructor(peripheralIds) {
-    this.initBuffer(peripheralIds);
-  }
-
   initBuffer(peripheralIds) {
     // Create a data buffer object (PeripheralBuffer) for each peripheral
     this.peripheralBuffer = {};
