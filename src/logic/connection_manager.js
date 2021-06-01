@@ -15,11 +15,11 @@ import {
 const LOOP_FREQUENCY = 1000;
 
 export class ConnectionManager {
-  constructor(targetMACs) {
-    this.connectionTargetMACs = targetMACs;
+  constructor(targetPeripheralIds) {
+    this.targetPeripheralIds = targetPeripheralIds;
     this.connectionStatuses = {};
-    for (const targetMAC of targetMACs) {
-      this.connectionStatuses[targetMAC] = new PeripheralStatus();
+    for (const targetId of targetPeripheralIds) {
+      this.connectionStatuses[targetId] = new PeripheralStatus();
     }
 
     this.discoveredPeripherals = {};
@@ -124,7 +124,7 @@ export class ConnectionManager {
         await this.subscribeToPeripheral(peripheral);
 
         if (
-          this.connectedPeripheralIds.size < this.connectionTargetMACs.length
+          this.connectedPeripheralIds.size < this.targetPeripheralIds.length
         ) {
           // More devices to connect, continue connection.
           logger.info(`More devices pending connection, continuing scan...`);
@@ -182,7 +182,7 @@ export class ConnectionManager {
   }
 
   onPeripheralDiscovered(peripheral) {
-    const targetSet = new Set(this.connectionTargetMACs);
+    const targetSet = new Set(this.targetPeripheralIds);
     const peripheralId = peripheral.id.toLowerCase();
     if (targetSet.has(peripheralId)) {
       // Add to list of discovered peripherals.

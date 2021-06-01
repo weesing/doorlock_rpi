@@ -7,19 +7,19 @@ export class BLEEngineTest extends BLEEngine {
     super();
   }
 
-  initPeripheralMACs() {
-    super.initPeripheralMACs();
+  initPeripheralIds() {
+    super.initPeripheralIds();
+
     const secrets = SecretsLoader.loadSecrets();
     logger.info(secrets);
     this.testMAC = secrets.testMAC.toLowerCase();
-  }
 
-  get connectionTargetMACs() {
-    return [this.testMAC];
+    this.peripheralIds = [this.testMAC];
   }
 
   async onDataReceived(peripheral, data, isNotification) {
     super.onDataReceived(peripheral, data, isNotification);
+
     const peripheralId = peripheral.id;
     if (peripheralId === this.testMAC) {
       switch (peripheralId) {

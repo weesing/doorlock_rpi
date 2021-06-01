@@ -9,29 +9,24 @@ export class BLEEngine extends DataReceiver {
     super();
 
     this._connectionManager = null;
-
-    // initialize all the peripheral MAC addresses.
-    this.initPeripheralMACs();
-
-    // initialize the buffers
-    this.initBuffer(this.connectionTargetMACs);
   }
 
-  get connectionTargetMACs() {
-    return [this.rfidMAC, this.lockMAC];
-  }
+  initPeripheralIds() {
+    super.initPeripheralIds();
 
-  get connectionManager() {
-    return this._connectionManager;
-  }
-
-  initPeripheralMACs() {
     const secrets = SecretsLoader.loadSecrets();
     logger.info(secrets);
 
     this.rfidMAC = secrets.rfidMAC.toLowerCase();
     this.lockMAC = secrets.lockMAC.toLowerCase();
+
+    this.peripheralIds = [this.rfidMAC, this.lockMAC];
+
     this.meMAC = secrets.nodeMAC.toLowerCase();
+  }
+
+  get connectionManager() {
+    return this._connectionManager;
   }
 
   async onDataReceived(peripheral, data, isNotification) {
@@ -62,7 +57,7 @@ export class BLEEngine extends DataReceiver {
     logger.info(`Intitializing BLE...`);
 
     const dataReceiver = this;
-    this._connectionManager = new ConnectionManager(this.connectionTargetMACs);
+    this._connectionManager = new ConnectionManager(this.peripheralIds);
     this._connectionManager.startConnections(dataReceiver);
   }
 
