@@ -49,6 +49,14 @@ export class ConnectionManager {
     });
     const buffer = Buffer.from('echo');
     characteristic.write(buffer);
+    
+    if (this.connectedPeripheralIds.size < this.targetPeripheralIds.length) {
+      // More devices to connect, continue connection.
+      logger.info(`More devices pending connection, continuing scan...`);
+      await this.restartScanning();
+    } else {
+      logger.info(`All devices connected, not restarting scan`);
+    }
   }
 
   async subscribeToPeripheral(peripheral) {
@@ -139,14 +147,6 @@ export class ConnectionManager {
         );
       }
       this.subscriptionTimeouts[peripheralId] = subscriptionTimeout;
-
-      if (this.connectedPeripheralIds.size < this.targetPeripheralIds.length) {
-        // More devices to connect, continue connection.
-        logger.info(`More devices pending connection, continuing scan...`);
-        await this.restartScanning();
-      } else {
-        logger.info(`All devices connected, not restarting scan`);
-      }
     };
 
     // Init callback for peripheral disconnected
