@@ -1,5 +1,5 @@
 import util from 'util';
-import _, { reject } from 'lodash';
+import _ from 'lodash';
 import noble from 'noble';
 import logger from '../lib/logger';
 import config from '../lib/config';
@@ -209,7 +209,7 @@ export class ConnectionManager {
     );
     if (this.isScanning) {
       logger.info('Already scanning');
-      return;
+      return Promise.resolve();
     }
 
     return new Promise((resolve) => {
@@ -226,6 +226,10 @@ export class ConnectionManager {
   }
 
   stopScanning() {
+    if (!this.isScanning) {
+      logger.info('Scanning has not started, skipping stop...');
+      return Promise.resolve();
+    }
     return new Promise((resolve) => {
       noble.stopScanning(() => {
         resolve();
