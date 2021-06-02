@@ -159,10 +159,10 @@ export class ConnectionManager {
     };
 
     peripheral.once('connect', async function () {
-      await onPeripheralConnected(peripheral);
+      onPeripheralConnected(peripheral);
     });
     peripheral.once('disconnect', async function () {
-      await onPeripheralDisconnect(peripheral);
+      onPeripheralDisconnect(peripheral);
     });
 
     logger.info(`[${peripheral.id}] Peripheral events initialized.`);
