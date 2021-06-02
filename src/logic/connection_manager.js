@@ -283,15 +283,17 @@ export class ConnectionManager {
     const onPeripheralDiscoveredCb = this.onPeripheralDiscovered.bind(this);
     noble.on('discover', onPeripheralDiscoveredCb);
 
-    noble.on('scanStart', async function () {
+    const onScanStart = () => {
       this.isScanning = true;
-      logger.info(`Scanning started...`);
-    });
-
-    noble.on('scanStop', async function () {
+      logger.info(`Scanning started`);
+    };
+    const onScanStop = () => {
       this.isScanning = false;
-      logger.warn(`Scanning stopped.`);
-    });
+      logger.info(`Scanning stopped`);
+    };
+
+    noble.on('scanStart', onScanStop.bind(this));
+    noble.on('scanStop', onScanStop.bind(this));
 
     // Start the scan
     await this.restartScanning();
