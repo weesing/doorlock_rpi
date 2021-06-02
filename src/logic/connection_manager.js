@@ -13,6 +13,7 @@ import {
 } from '../peripheral/peripheral_status';
 
 const LOOP_FREQUENCY = 1000;
+const SUBSCRIPTION_DELAY = 1000;
 
 export class ConnectionManager {
   constructor(targetPeripheralIds) {
@@ -112,6 +113,17 @@ export class ConnectionManager {
 
       this.connectedPeripheralIds.add(peripheralId);
 
+      if (this.connectedPeripheralIds.size < this.targetPeripheralIds.length) {
+        // More devices to connect, continue connection.
+        logger.info(`More devices pending connection, continuing scan...`);
+        await this.restartScanning();
+      } else {
+        logger.info(`All devices connected, not restarting scan`);
+      }
+
+      // Create the timeout that does the subscription on the peripheral
+      // Note that this timeout can be cancelled when peripheral
+      // disconnects (see disconnectPeripheral())
       const subscriptionTimeout = setTimeout(async () => {
         logger.info(
           `[${peripheralId}] Initiate service and characteristics discovery and subscription.`
@@ -122,27 +134,21 @@ export class ConnectionManager {
         );
 
         await this.subscribeToPeripheral(peripheral);
-      }, 1000);
+      }, SUBSCRIPTION_DELAY);
 
       logger.info(`[${peripheralId}] Timeout for subscription created`);
       if (!this.subscriptionTimeouts) {
         this.subscriptionTimeouts = {};
       }
+
+      // If there was any existing timeout, clear it before replacing it.
       if (this.subscriptionTimeouts[peripheralId]) {
         clearTimeout(this.subscriptionTimeouts[peripheralId]);
-        logger.info(`[${peripheralId}] Previous timeout cancelled`);
+        logger.info(
+          `[${peripheralId}] Previous timeout cancelled before replacement`
+        );
       }
       this.subscriptionTimeouts[peripheralId] = subscriptionTimeout;
-
-      if (
-        this.connectedPeripheralIds.size < this.targetPeripheralIds.length
-      ) {
-        // More devices to connect, continue connection.
-        logger.info(`More devices pending connection, continuing scan...`);
-        await this.restartScanning();
-      } else {
-        logger.info(`All devices connected, not restarting scan`);
-      }
     };
 
     // Init callback for peripheral disconnected
@@ -189,10 +195,14 @@ export class ConnectionManager {
     // clear from connected and subscribed list.
     this.connectedPeripheralIds.delete(peripheralId);
     this.subscribedPeripheralIds.delete(peripheralId);
+
+    // Clear all the subscription timeouts if any
     if (this.subscriptionTimeouts[peripheralId]) {
       clearTimeout(this.subscriptionTimeouts[peripheralId]);
       this.subscriptionTimeouts[peripheralId] = null;
-      logger.warn(`[${peripheralId}] Previous subscription timeout cancelled due to disconnection.`);
+      logger.warn(
+        `[${peripheralId}] Previous subscription timeout cancelled due to disconnection.`
+      );
     }
   }
 
@@ -209,23 +219,18 @@ export class ConnectionManager {
         )}`
       );
     } else {
-/*
-      logger.debug(
+      logger.trace(
         `Found unknown device ${util.inspect(
           _.pick(peripheral, ['id', 'address']),
           { depth: 10, colors: true }
         )}`
       );
-*/
     }
   }
 
   startScanning() {
-    logger.info(
-      `Scanning triggered, current state of scanning - ${this.isScanning}`
-    );
     if (this.isScanning) {
-      logger.info('Already scanning');
+      logger.info('Already scanning, skipping scan trigger.');
       return Promise.resolve();
     }
 
@@ -244,7 +249,7 @@ export class ConnectionManager {
 
   stopScanning() {
     if (!this.isScanning) {
-      logger.info('Scanning has not started, skipping stop...');
+      logger.info('Scanning has not started, skipping stop trigger...');
       return Promise.resolve();
     }
     return new Promise((resolve) => {
