@@ -106,7 +106,7 @@ export class ConnectionManager {
     );
   }
 
-  async connectPeripheral(peripheral) {
+  connectPeripheral(peripheral) {
     // Attempt to connect to peripheral.
     // Set state of peripheral to connecting.
     this.peripheralStatuses[peripheral.id].bulkSet({
@@ -181,7 +181,7 @@ export class ConnectionManager {
     });
   }
 
-  async disconnectPeripheral(peripheral) {
+  disconnectPeripheral(peripheral) {
     const peripheralId = peripheral.id;
     logger.info(`[${peripheralId}] Disconnecting peripheral`);
     try {
@@ -227,12 +227,12 @@ export class ConnectionManager {
           `[${peripheralId}] !!!! Repeated device being discovered while being subscribed. Resetting peripheral status. Is this a bug?`
         );
         // attempt to disconnect
-        await this.disconnectPeripheral(
+        this.disconnectPeripheral(
           this.peripheralStatuses[peripheralId].peripheral
         );
       }
       // Start connecting.
-      await this.connectPeripheral(peripheral);
+      this.connectPeripheral(peripheral);
     } else {
       logger.trace(
         `Found unknown device ${util.inspect(
