@@ -117,7 +117,7 @@ export class ConnectionManager {
     logger.info(`[${peripheral.id}] Initializing peripheral events`);
 
     // Init callback for peripheral connected
-    const onPeripheralConnected = async (peripheral) => {
+    const onPeripheralConnected = (peripheral) => {
       const peripheralId = peripheral.id;
       logger.info(`[${peripheralId}] >>>> Peripheral CONNECTED <<<<`);
 
@@ -151,10 +151,11 @@ export class ConnectionManager {
     };
 
     // Init callback for peripheral disconnected
-    const onPeripheralDisconnect = async (peripheral) => {
+    const onPeripheralDisconnect = (peripheral) => {
       logger.warn(`[${peripheral.id}] >>>> Peripheral DISCONNECTED <<<<`);
       this.disconnectPeripheral(peripheral);
-      await this.restartScanning();
+      // Fire and forget
+      this.restartScanning();
     };
 
     peripheral.once('connect', async function () {
