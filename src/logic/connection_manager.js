@@ -285,14 +285,14 @@ export class ConnectionManager {
 
     const onScanStart = () => {
       this.isScanning = true;
-      logger.info(`Scanning started`);
+      logger.debug(`Scanning started`);
     };
     const onScanStop = () => {
       this.isScanning = false;
-      logger.info(`Scanning stopped`);
+      logger.debug(`Scanning stopped`);
     };
 
-    noble.on('scanStart', onScanStop.bind(this));
+    noble.on('scanStart', onScanStart.bind(this));
     noble.on('scanStop', onScanStop.bind(this));
 
     // Start the scan
