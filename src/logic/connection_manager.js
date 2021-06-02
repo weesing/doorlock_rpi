@@ -114,14 +114,6 @@ export class ConnectionManager {
 
       this.connectedPeripheralIds.add(peripheralId);
 
-      if (this.connectedPeripheralIds.size < this.targetPeripheralIds.length) {
-        // More devices to connect, continue connection.
-        logger.info(`More devices pending connection, continuing scan...`);
-        await this.restartScanning();
-      } else {
-        logger.info(`All devices connected, not restarting scan`);
-      }
-
       // Create the timeout that does the subscription on the peripheral
       // Note that this timeout can be cancelled when peripheral
       // disconnects (see disconnectPeripheral())
@@ -138,7 +130,7 @@ export class ConnectionManager {
       }, SUBSCRIPTION_DELAY);
 
       logger.info(`[${peripheralId}] Timeout for subscription created`);
-      
+
       // If there was any existing timeout, clear it before replacing it.
       if (this.subscriptionTimeouts[peripheralId]) {
         clearTimeout(this.subscriptionTimeouts[peripheralId]);
@@ -147,6 +139,14 @@ export class ConnectionManager {
         );
       }
       this.subscriptionTimeouts[peripheralId] = subscriptionTimeout;
+
+      if (this.connectedPeripheralIds.size < this.targetPeripheralIds.length) {
+        // More devices to connect, continue connection.
+        logger.info(`More devices pending connection, continuing scan...`);
+        await this.restartScanning();
+      } else {
+        logger.info(`All devices connected, not restarting scan`);
+      }
     };
 
     // Init callback for peripheral disconnected
@@ -167,7 +167,7 @@ export class ConnectionManager {
 
     logger.info(`[${peripheral.id}] Initiating connection...`);
     // Initiate the connection after all the events have been registered above.
-    peripheral.connect(function (error) {
+    peripheral.connect((error) => {
       if (error) {
         logger.info(
           `[${peripheral.id}] Errors on connect to - ${util.inspect(error, {
