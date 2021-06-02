@@ -206,7 +206,7 @@ export class ConnectionManager {
     }
   }
 
-  onPeripheralDiscovered(peripheral) {
+  async onPeripheralDiscovered(peripheral) {
     const targetSet = new Set(this.targetPeripheralIds);
     const peripheralId = peripheral.id.toLowerCase();
     if (targetSet.has(peripheralId)) {
