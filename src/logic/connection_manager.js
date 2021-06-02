@@ -53,7 +53,8 @@ export class ConnectionManager {
     if (this.connectedPeripheralIds.size < this.targetPeripheralIds.length) {
       // More devices to connect, continue connection.
       logger.info(`More devices pending connection, continuing scan...`);
-      await this.restartScanning();
+      // fire and forget
+      this.restartScanning();
     } else {
       logger.info(`All devices connected, not restarting scan`);
     }
