@@ -210,14 +210,29 @@ export class ConnectionManager {
     const targetSet = new Set(this.targetPeripheralIds);
     const peripheralId = peripheral.id.toLowerCase();
     if (targetSet.has(peripheralId)) {
-      // Add to list of discovered peripherals.
-      this.discoveredPeripherals[peripheralId] = peripheral;
       logger.info(
         `[${peripheralId}] >>>> Discovered peripheral ${util.inspect(
           _.pick(peripheral, ['id', 'address']),
           { depth: 10, colors: true }
         )}`
       );
+      const status = this.peripheralStatuses[peripheralId].status;
+      if (
+        status === PERIPHERAL_STATE_CONNECTING ||
+        status === PERIPHERAL_STATE_SUBSCRIBING ||
+        status === PERIPHERAL_STATE_SUBSCRIBED
+      ) {
+        // This shouldn't happen. But try clearing connection and reconnect again.
+        logger.warn(
+          `[${peripheralId}] !!!! Repeated device being discovered while being subscribed. Resetting peripheral status. Is this a bug?`
+        );
+        // attempt to disconnect
+        await this.disconnectPeripheral(
+          this.peripheralStatuses[peripheralId].peripheral
+        );
+      }
+      // Start connecting.
+      await this.connectPeripheral(peripheral);
     } else {
       logger.trace(
         `Found unknown device ${util.inspect(
@@ -265,6 +280,7 @@ export class ConnectionManager {
   }
 
   async loop() {
+    /*
     // Start connecting discovered devices
     const discoveredMACs = Object.keys(this.discoveredPeripherals) || [];
 
@@ -296,6 +312,7 @@ export class ConnectionManager {
       // delete from discovered queue
       delete this.discoveredPeripherals[discoveredMAC];
     }
+    */
   }
 
   async startConnections(dataReceiver) {
