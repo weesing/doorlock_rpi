@@ -1,5 +1,5 @@
 import util from 'util';
-import _ from 'lodash';
+import _, { reject } from 'lodash';
 import noble from 'noble';
 import logger from '../lib/logger';
 import config from '../lib/config';
@@ -128,7 +128,7 @@ export class ConnectionManager {
         ) {
           // More devices to connect, continue connection.
           logger.info(`More devices pending connection, continuing scan...`);
-          this.restartScanning();
+          await this.restartScanning();
         } else {
           logger.info(`All devices connected, not restarting scan`);
         }
@@ -139,7 +139,7 @@ export class ConnectionManager {
     const onPeripheralDisconnect = async (peripheral) => {
       logger.warn(`[${peripheral.id}] >>>> Peripheral DISCONNECTED <<<<`);
       this.disconnectPeripheral(peripheral);
-      this.restartScanning();
+      await this.restartScanning();
     };
 
     peripheral.once('connect', async function () {
@@ -204,28 +204,38 @@ export class ConnectionManager {
   }
 
   startScanning() {
+    logger.info(
+      `Scanning triggered, current state of scanning - ${this.isScanning}`
+    );
     if (this.isScanning) {
       logger.info('Already scanning');
       return;
     }
 
-    // Start the scanning.
-    noble.startScanning([], false, function (error) {
-      if (error) {
-        logger.error(`Error on start scan.`);
-        logger.error(util.inspect(error, { depth: 10, colors: true }));
-        return;
-      }
+    return new Promise((resolve) => {
+      // Start the scanning.
+      noble.startScanning([], false, (error) => {
+        if (error) {
+          logger.error(`Error on start scan.`);
+          logger.error(util.inspect(error, { depth: 10, colors: true }));
+          reject(error);
+        }
+        resolve();
+      });
     });
   }
 
   stopScanning() {
-    noble.stopScanning();
+    return new Promise((resolve) => {
+      noble.stopScanning(() => {
+        resolve();
+      });
+    });
   }
 
-  restartScanning() {
-    this.stopScanning();
-    this.startScanning();
+  async restartScanning() {
+    await this.stopScanning();
+    await this.startScanning();
   }
 
   async loop() {
@@ -270,17 +280,17 @@ export class ConnectionManager {
     noble.on('discover', onPeripheralDiscoveredCb);
 
     noble.on('scanStart', async function () {
-      logger.info(`Scanning started...`);
       this.isScanning = true;
+      logger.info(`Scanning started...`);
     });
 
     noble.on('scanStop', async function () {
-      logger.warn(`Scanning stopped.`);
       this.isScanning = false;
+      logger.warn(`Scanning stopped.`);
     });
 
     // Start the scan
-    this.startScanning();
+    await this.restartScanning();
 
     // Start the loop
     const loopFn = this.loop.bind(this);
