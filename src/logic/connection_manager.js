@@ -49,7 +49,7 @@ export class ConnectionManager {
     });
     const buffer = Buffer.from('echo');
     characteristic.write(buffer);
-    
+
     if (this.connectedPeripheralIds.size < this.targetPeripheralIds.length) {
       // More devices to connect, continue connection.
       logger.info(`More devices pending connection, continuing scan...`);
@@ -278,48 +278,9 @@ export class ConnectionManager {
     await this.startScanning();
   }
 
-  async loop() {
-    /*
-    // Start connecting discovered devices
-    const discoveredMACs = Object.keys(this.discoveredPeripherals) || [];
-
-    for (const discoveredMAC of discoveredMACs) {
-      const discoveredPeripheral = this.discoveredPeripherals[discoveredMAC];
-      const status = this.peripheralStatuses[discoveredMAC].status;
-      switch (status) {
-        case PERIPHERAL_STATE_CONNECTING:
-        case PERIPHERAL_STATE_SUBSCRIBING:
-        case PERIPHERAL_STATE_SUBSCRIBED: {
-          // This shouldn't happen. But try clearing connection and reconnect again.
-          logger.warn(
-            `[${discoveredMAC}] !!!! Repeated device being discovered while being subscribed. Resetting peripheral status. Is this a bug?`
-          );
-          // attempt to disconnect
-          await this.disconnectPeripheral(discoveredPeripheral);
-
-          // fall through to PERIPHERAL_STATE_DISCONNECTED to continue to connect.
-        }
-        case PERIPHERAL_STATE_DISCONNECTED: {
-          logger.info(
-            `[${discoveredMAC}] >>>> Known device discovered, attempting to connect... <<<<`
-          );
-          // Start connecting.
-          await this.connectPeripheral(discoveredPeripheral);
-          break;
-        }
-      }
-      // delete from discovered queue
-      delete this.discoveredPeripherals[discoveredMAC];
-    }
-    */
-  }
-
   async startConnections(dataReceiver) {
     this.dataReceiver = dataReceiver;
     this.onDataReceivedFn = dataReceiver.onDataReceived.bind(dataReceiver);
-
-    const onPeripheralDiscoveredCb = this.onPeripheralDiscovered.bind(this);
-    noble.on('discover', onPeripheralDiscoveredCb);
 
     const onScanStart = () => {
       this.isScanning = true;
@@ -330,16 +291,11 @@ export class ConnectionManager {
       logger.debug(`Scanning stopped`);
     };
 
+    noble.on('discover', this.onPeripheralDiscovered.bind(this));
     noble.on('scanStart', onScanStart.bind(this));
     noble.on('scanStop', onScanStop.bind(this));
 
     // Start the scan
     await this.restartScanning();
-
-    // Start the loop
-    const loopFn = this.loop.bind(this);
-    this.loopInterval = setInterval(async () => {
-      await loopFn();
-    }, LOOP_FREQUENCY);
   }
 }
