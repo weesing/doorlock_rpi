@@ -27,6 +27,7 @@ export class ConnectionManager {
     this.connectedPeripheralIds = new Set();
     this.subscribedPeripheralIds = new Set();
     this.isScanning = false;
+    this.subscriptionTimeouts = {};
 
     this.dataReceiver = null;
     this.onDataReceivedFn = null;
@@ -137,10 +138,7 @@ export class ConnectionManager {
       }, SUBSCRIPTION_DELAY);
 
       logger.info(`[${peripheralId}] Timeout for subscription created`);
-      if (!this.subscriptionTimeouts) {
-        this.subscriptionTimeouts = {};
-      }
-
+      
       // If there was any existing timeout, clear it before replacing it.
       if (this.subscriptionTimeouts[peripheralId]) {
         clearTimeout(this.subscriptionTimeouts[peripheralId]);
