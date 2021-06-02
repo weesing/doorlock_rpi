@@ -5,14 +5,12 @@ import logger from '../lib/logger';
 import config from '../lib/config';
 
 import {
-  PERIPHERAL_STATE_DISCONNECTED,
   PERIPHERAL_STATE_CONNECTING,
   PERIPHERAL_STATE_SUBSCRIBING,
   PERIPHERAL_STATE_SUBSCRIBED,
   PeripheralStatus
 } from '../peripheral/peripheral_status';
 
-const LOOP_FREQUENCY = 1000;
 const SUBSCRIPTION_DELAY = 1000;
 
 export class ConnectionManager {
