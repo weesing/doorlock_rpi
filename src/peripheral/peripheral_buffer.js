@@ -39,6 +39,7 @@ export class PeripheralBuffer {
     */
     const receivedStringTokens = receivedString
       .split(DETECT_DELIMITER) // split by delimiters
+      .filter((token) => token !== '')
       .map((token) => `${token}${DETECT_DELIMITER}`); // put back the delimiters
 
     /*
@@ -51,7 +52,7 @@ export class PeripheralBuffer {
       let lastToken = receivedStringTokens.splice(
         receivedStringTokens.length - 1,
         1
-      );
+      )[0];
       // take away the delimiter
       lastToken = lastToken.replace(DETECT_DELIMITER, '');
       // push back
@@ -62,12 +63,15 @@ export class PeripheralBuffer {
      STEP 3:
      Add the tokens into the history
     */
-    const lastHistory = this.dataStringHistory.splice(
-      this.dataStringHistory.length - 1,
-      1
-    );
+    let lastHistory;
+    if (this.dataStringHistory.length > 0) {
+      lastHistory = this.dataStringHistory.splice(
+        this.dataStringHistory.length - 1,
+        1
+      )[0];
+    }
     let currReceivedStringToken = receivedStringTokens.shift();
-    const lastHistoryDataString = lastHistory.dataString;
+    let lastHistoryDataString = lastHistory ? lastHistory.dataString : '';
     if (lastHistoryDataString.endsWith(DETECT_DELIMITER)) {
       // last history already ended, push it back.
       this.addHistory(lastHistoryDataString);
@@ -81,10 +85,8 @@ export class PeripheralBuffer {
 
     // push the rest of the tokens onto history
     while (!_.isEmpty(receivedStringTokens)) {
-      currReceivedStringToken = receivedStringTokens.shift();
-      this.dataStringHistory.push(
-        new PeripheralBufferHistory({ dataString: currReceivedDataString })
-      );
+      let currReceivedStringToken = receivedStringTokens.shift();
+      this.addHistory(currReceivedStringToken);
     }
 
     this._dataString += buffer.toString();
