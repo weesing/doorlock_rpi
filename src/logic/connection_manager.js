@@ -297,7 +297,7 @@ export class ConnectionManager {
     this.dataReceiver = dataReceiver;
     this.onDataReceivedFn = dataReceiver.onDataReceived.bind(dataReceiver);
     this.onPeripheralSubscribedFn =
-      dataReceiver.onPeripheralSubscribed.bind(dataReceived);
+      dataReceiver.onPeripheralSubscribed.bind(dataReceiver);
 
     const onScanStart = () => {
       this.isScanning = true;
