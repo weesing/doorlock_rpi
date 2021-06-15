@@ -40,8 +40,6 @@ export class DataReceiver {
       this.peripheralBuffer[peripheralId].appendBuffer(data);
       const buffer = this.peripheralBuffer[peripheralId].buffer;
       const history = this.peripheralBuffer[peripheralId].dataStringHistory;
-      logger.info(`[${peripheralId}] Peripheral buffer '${buffer}'`);
-      logger.info(`[${peripheralId}] Peripheral history ${history}`);
     } else {
       logger.warn(`[${peripheralId}] Received data from unknown device.`);
     }

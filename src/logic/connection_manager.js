@@ -94,12 +94,14 @@ export class ConnectionManager {
         `[${peripheral.id}] Subscribing to characteristics ${characteristic.uuid}`
       );
       characteristic.on('data', (data, isNotification) => {
+/*
         logger.info(
           `[${peripheral.id}] Received buffer -> ${util.inspect(data, {
             depth: 10,
             colors: true
           })} (${data.toString()})`
         );
+*/
         this.onDataReceivedFn(peripheral, data, isNotification);
       });
       characteristic.subscribe((error) => {
