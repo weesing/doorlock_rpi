@@ -60,7 +60,7 @@ export class BLEEngine extends DataReceiver {
     switch (peripheralId) {
       case this.lockMAC: {
         if (
-          !_.isNil(this._outboxMessageMap[this.lockMAC]) ||
+          _.isNil(this._outboxMessageMap[this.lockMAC]) ||
           this._outboxMessageMap[this.lockMAC].length > 0
         ) {
           // Clear all the outbox messages

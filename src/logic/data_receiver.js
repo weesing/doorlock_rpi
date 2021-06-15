@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import { PeripheralBuffer } from '../peripheral/peripheral_buffer';
 import logger from '../lib/logger';
 
@@ -10,10 +11,6 @@ export class DataReceiver {
 
     // initialize the buffers
     this.initBuffer(this.peripheralIds);
-
-    // Start outbox intervals
-    this._outboxMessageMap = {};
-    this._outboxIntervals = {};
   }
 
   initPeripheralIds() {
@@ -24,6 +21,8 @@ export class DataReceiver {
   }
 
   initPeripheralInterval(peripheralId) {
+console.log(this._outboxIntervals);
+console.log(!_.isNil(this._outboxIntervals[peripheralId]));
     if (!_.isNil(this._outboxIntervals[peripheralId])) {
       clearInterval(this._outboxIntervals[peripheralId]);
     }
@@ -33,6 +32,8 @@ export class DataReceiver {
   }
 
   initPeripheralIntervals() {
+    this._outboxMessageMap = {};
+    this._outboxIntervals = {};
     for (const peripheralId of this.peripheralIds) {
       logger.info(
         `Intializing outbox intervals for peripheral ${peripheralId}`

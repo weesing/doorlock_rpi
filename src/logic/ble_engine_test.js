@@ -19,8 +19,5 @@ export class BLEEngineTest extends BLEEngine {
 
     // Only require lock to test
     this.peripheralIds = [this.lockMAC];
-
-    // Start outbox intervals
-    this.initPeripheralInterval(this.lockMAC);
   }
 }
