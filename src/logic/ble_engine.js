@@ -10,6 +10,23 @@ export class BLEEngine extends DataReceiver {
     super();
 
     this._connectionManager = null;
+
+    this.initPeripheralIntervals();
+    this.initInitialPeripheralSyncTimeout();
+  }
+
+  initPeripheralIds() {
+    super.initPeripheralIds();
+
+    const secrets = SecretsLoader.loadSecrets();
+    logger.info(secrets);
+
+    this.rfidMAC = secrets.rfidMAC.toLowerCase();
+    this.lockMAC = secrets.lockMAC.toLowerCase();
+
+    this.peripheralIds = [this.rfidMAC, this.lockMAC];
+
+    this.meMAC = secrets.nodeMAC.toLowerCase();
   }
 
   sendOldestPeripheralMessage(peripheralId) {
@@ -30,18 +47,29 @@ export class BLEEngine extends DataReceiver {
     }
   }
 
-  initPeripheralIds() {
-    super.initPeripheralIds();
+  initPeripheralInterval(peripheralId) {
+    if (!_.isNil(this._outboxIntervals[peripheralId])) {
+      logger.info(`[${peripheralId}] Clearing existing outbox interval...`);
+      clearInterval(this._outboxIntervals[peripheralId]);
+    }
+    this._outboxIntervals[peripheralId] = setInterval(() => {
+      this.sendOldestPeripheralMessage(peripheralId);
+    }, 500);
+  }
 
-    const secrets = SecretsLoader.loadSecrets();
-    logger.info(secrets);
+  initPeripheralIntervals() {
+    this._outboxMessageMap = {};
+    this._outboxIntervals = {};
+    for (const peripheralId of this.peripheralIds) {
+      logger.info(
+        `Intializing outbox intervals for peripheral ${peripheralId}`
+      );
+      this.initPeripheralInterval(peripheralId);
+    }
+  }
 
-    this.rfidMAC = secrets.rfidMAC.toLowerCase();
-    this.lockMAC = secrets.lockMAC.toLowerCase();
-
-    this.peripheralIds = [this.rfidMAC, this.lockMAC];
-
-    this.meMAC = secrets.nodeMAC.toLowerCase();
+  initInitialPeripheralSyncTimeout() {
+    this._initialPeripheralSyncTimeout = {};
   }
 
   get connectionManager() {
@@ -49,8 +77,6 @@ export class BLEEngine extends DataReceiver {
   }
 
   async sendInitialPeripheralSync(peripheralId) {
-    super.sendInitialPeripheralSync(peripheralId);
-
     // Send lock MAC intialization settings
     if (peripheralId === this.lockMAC) {
       if (
@@ -81,6 +107,31 @@ export class BLEEngine extends DataReceiver {
         `adxl_unlk=${adxlSettings.angles.unlocked}${delimiter}`,
         `</settings>`
       ];
+    }
+  }
+
+  async onPeripheralSubscribed(peripheralId) {
+    super.onPeripheralSubscribed(peripheralId);
+
+    const characteristic =
+      this.connectionManager.getPeripheralCharacteristics(peripheralId);
+    logger.info(`Peripheral ${peripheralId} subscribed.`);
+    if (_.isNil(characteristic)) {
+      return;
+    }
+    if (this._initialPeripheralSyncTimeout[peripheralId]) {
+      clearTimeout(this._initialPeripheralSyncTimeout[peripheralId]);
+    }
+    this._initialPeripheralSyncTimeout[peripheralId] = setTimeout(async () => {
+      await this.sendInitialPeripheralSync(peripheralId);
+    });
+  }
+
+  async onPeripheralDisconnected(peripheralId) {
+    super.onPeripheralDisconnected(peripheralId);
+
+    if (this._initialPeripheralSyncTimeout[peripheralId]) {
+      clearTimeout(this._initialPeripheralSyncTimeout[peripheralId]);
     }
   }
 
