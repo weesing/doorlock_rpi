@@ -21,9 +21,8 @@ export class DataReceiver {
   }
 
   initPeripheralInterval(peripheralId) {
-console.log(this._outboxIntervals);
-console.log(!_.isNil(this._outboxIntervals[peripheralId]));
     if (!_.isNil(this._outboxIntervals[peripheralId])) {
+      logger.info(`[${peripheralId}] Clearing existing outbox interval...`)
       clearInterval(this._outboxIntervals[peripheralId]);
     }
     this._outboxIntervals[peripheralId] = setInterval(() => {
