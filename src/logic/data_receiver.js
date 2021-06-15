@@ -30,6 +30,10 @@ export class DataReceiver {
     this.peripheralBuffer[peripheralId].clearBuffer();
   }
 
+  async onPeripheralSubscribed(peripheralId) {
+    // Implemented by child classes.
+  }
+
   async onDataReceived(peripheral, data, isNotification) {
     const peripheralId = peripheral.id;
     if (this.peripheralBuffer[peripheralId]) {

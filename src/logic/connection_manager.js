@@ -16,9 +16,9 @@ const SUBSCRIPTION_DELAY = 1000;
 export class ConnectionManager {
   constructor(targetPeripheralIds) {
     this.targetPeripheralIds = targetPeripheralIds;
-    this.connectionStatuses = {};
+    this._connectionStatuses = {};
     for (const targetId of targetPeripheralIds) {
-      this.connectionStatuses[targetId] = new PeripheralStatus();
+      this._connectionStatuses[targetId] = new PeripheralStatus();
     }
 
     this.discoveredPeripherals = {};
@@ -29,24 +29,40 @@ export class ConnectionManager {
 
     this.dataReceiver = null;
     this.onDataReceivedFn = null;
+    this.onPeripheralSubscribedFn = null;
   }
 
-  get peripheralStatuses() {
-    return this.connectionStatuses;
+  get connectionStatuses() {
+    return this._connectionStatuses;
+  }
+
+  getPeripheralCharacteristics(peripheralId) {
+    const status = this._connectionStatuses[peripheralId];
+    if (!status || status.status !== PERIPHERAL_STATE_SUBSCRIBED) {
+      return null;
+    }
+
+    return status.characteristic;
   }
 
   onPeripheralSubscribed(peripheral, characteristic) {
     logger.info(
       `[${peripheral.id}] >>>> Subscribed to ${characteristic.uuid} on peripheral <<<<`
     );
-    this.subscribedPeripheralIds.add(peripheral.id);
-    this.peripheralStatuses[peripheral.id].bulkSet({
+    const peripheralId = peripheral.id;
+    this.subscribedPeripheralIds.add(peripheralId);
+    this._connectionStatuses[peripheralId].bulkSet({
       status: PERIPHERAL_STATE_SUBSCRIBED,
       peripheral,
-      characteristic: characteristic
+      characteristic
     });
-    const buffer = Buffer.from('echo');
+    const buffer = Buffer.from('connected');
     characteristic.write(buffer);
+
+    if (this.onPeripheralSubscribedFn) {
+      // Callback on peripheral subscribed
+      this.onPeripheralSubscribedFn(peripheralId);
+    }
 
     if (this.connectedPeripheralIds.size < this.targetPeripheralIds.length) {
       // More devices to connect, continue connection.
@@ -59,7 +75,7 @@ export class ConnectionManager {
   }
 
   async subscribeToPeripheral(peripheral) {
-    this.peripheralStatuses[peripheral.id].bulkSet({
+    this._connectionStatuses[peripheral.id].bulkSet({
       status: PERIPHERAL_STATE_SUBSCRIBING,
       peripheral
     });
@@ -107,7 +123,7 @@ export class ConnectionManager {
   connectPeripheral(peripheral) {
     // Attempt to connect to peripheral.
     // Set state of peripheral to connecting.
-    this.peripheralStatuses[peripheral.id].bulkSet({
+    this._connectionStatuses[peripheral.id].bulkSet({
       status: PERIPHERAL_STATE_CONNECTING,
       peripheral
     });
@@ -188,7 +204,7 @@ export class ConnectionManager {
       logger.error(`[${peripheralId}] Error disconnecting from peripheral.`);
       logger.error(e);
     }
-    this.peripheralStatuses[peripheralId].reset();
+    this._connectionStatuses[peripheralId].reset();
     this.dataReceiver.clearBufferByPeripheral(peripheralId);
     // clear from connected and subscribed list.
     this.connectedPeripheralIds.delete(peripheralId);
@@ -214,7 +230,7 @@ export class ConnectionManager {
           { depth: 10, colors: true }
         )}`
       );
-      const status = this.peripheralStatuses[peripheralId].status;
+      const status = this._connectionStatuses[peripheralId].status;
       if (
         status === PERIPHERAL_STATE_CONNECTING ||
         status === PERIPHERAL_STATE_SUBSCRIBING ||
@@ -226,7 +242,7 @@ export class ConnectionManager {
         );
         // attempt to disconnect
         this.disconnectPeripheral(
-          this.peripheralStatuses[peripheralId].peripheral
+          this._connectionStatuses[peripheralId].peripheral
         );
       }
       // Start connecting.
@@ -280,6 +296,8 @@ export class ConnectionManager {
   async startConnections(dataReceiver) {
     this.dataReceiver = dataReceiver;
     this.onDataReceivedFn = dataReceiver.onDataReceived.bind(dataReceiver);
+    this.onPeripheralSubscribedFn =
+      dataReceiver.onPeripheralSubscribed.bind(dataReceived);
 
     const onScanStart = () => {
       this.isScanning = true;
