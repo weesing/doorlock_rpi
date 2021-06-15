@@ -4,9 +4,8 @@ import { StaticGlobals } from '../../lib/static_globals';
 export let router = express.Router();
 
 router.post('/init', function (req, res, next) {
-  console.log(require('util').inspect(req, { depth: 10 }));
   const body = req.body;
-  const peripheralId = body.peripheralId;
+  const peripheralId = body.peripheralId.toLowerCase();
   if (peripheralId) {
     StaticGlobals.getInstance()
       .getVar('ble_engine')
