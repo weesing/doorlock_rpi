@@ -9,9 +9,6 @@ export class BLEEngine extends DataReceiver {
   constructor() {
     super();
 
-    this._outboxMessageMap = {};
-    this._outboxIntervals = {};
-
     this._connectionManager = null;
   }
 

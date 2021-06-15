@@ -13,6 +13,10 @@ export class DataReceiver {
   initPeripheralIds() {
     // To be implemented by child classes.
     this.peripheralIds = [];
+
+    this._outboxMessageMap = {};
+    this._outboxIntervals = {};
+
     return;
   }
 
