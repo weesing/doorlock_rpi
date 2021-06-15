@@ -66,7 +66,7 @@ export class BLEEngine extends DataReceiver {
           // Clear all the outbox messages
           this._outboxMessageMap[this.lockMAC] = [];
         }
-        setTimeout(() => {
+        this._lockInitSettingsTimeout = setTimeout(() => {
           // Send all the settings.
           logger.info(`Sending settings....`);
           const mainServoSettings = _.get(config, `lock.settings.main_servo`);
