@@ -1,6 +1,7 @@
 import { BLEEngine } from './ble_engine';
 import { SecretsLoader } from '../lib/secrets_loader';
 import logger from '../lib/logger';
+import config from '../lib/config';
 
 export class BLEEngineTest extends BLEEngine {
   constructor() {
