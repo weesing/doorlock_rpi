@@ -9,7 +9,34 @@ export class BLEEngine extends DataReceiver {
   constructor() {
     super();
 
+    this._outboxMessageMap = {};
+    this._outboxIntervals = {};
+
     this._connectionManager = null;
+  }
+
+  sendOldestPeripheralMessage(peripheralId) {
+    if (
+      !_.isNil(this._outboxMessageMap[peripheralId]) &&
+      this._outboxMessageMap[peripheralId].length > 0
+    ) {
+      // get characteristic for sending.
+      const characteristic =
+        this.connectionManager.getPeripheralCharacteristics(peripheralId);
+      if (_.isNil(characteristic)) {
+        return;
+      }
+      // send oldest message
+      const pending = this._outboxMessageMap[peripheralId].shift();
+      logger.info(`[${peripheralId}] Sending ${pending} to ${peripheralId}`);
+      characteristic.write(Buffer.from(pending));
+    }
+  }
+
+  initPeripheralInterval(peripheralId) {
+    this.outboxInterval[peripheralId] = setInterval(() => {
+      this.sendOldestPeripheralMessage(peripheralId);
+    }, 500);
   }
 
   initPeripheralIds() {
@@ -24,6 +51,10 @@ export class BLEEngine extends DataReceiver {
     this.peripheralIds = [this.rfidMAC, this.lockMAC];
 
     this.meMAC = secrets.nodeMAC.toLowerCase();
+
+    // Start outbox intervals
+    this.initPeripheralInterval(this.rfidMAC);
+    this.initPeripheralInterval(this.lockMAC);
   }
 
   get connectionManager() {
@@ -34,38 +65,45 @@ export class BLEEngine extends DataReceiver {
     super.onPeripheralSubscribed(peripheralId);
     const characteristic =
       this.connectionManager.getPeripheralCharacteristics(peripheralId);
+    logger.info(`Peripheral ${peripheralId} subscribed.`);
     if (_.isNil(characteristic)) {
       return;
     }
 
     switch (peripheralId) {
       case this.lockMAC: {
-        // Send all the settings.
-        const mainServoSettings = _.get(config, `lock.settings.main_servo`);
-        const linearServoSettings = _.get(config, `lock.settings.linear_servo`);
-        const adxlSettings = _.get(config, `lock.settings.adxl`);
+        if (
+          !_.isNil(this._outboxMessageMap[this.lockMAC]) ||
+          this._outboxMessageMap[this.lockMAC].length > 0
+        ) {
+          // Clear all the outbox messages
+          this._outboxMessageMap[this.lockMAC] = [];
+        }
+        setTimeout(() => {
+          // Send all the settings.
+          logger.info(`Sending settings....`);
+          const mainServoSettings = _.get(config, `lock.settings.main_servo`);
+          const linearServoSettings = _.get(
+            config,
+            `lock.settings.linear_servo`
+          );
+          const adxlSettings = _.get(config, `lock.settings.adxl`);
 
-        const delimiter = `\r\n`;
-        let sendData = `m_unlk=${mainServoSettings.frequencies.unlock}${delimiter}`;
-        characteristic.write(Buffer.from(sendData));
-        sendData = `m_lk=${mainServoSettings.frequencies.lock}${delimiter}`;
-        characteristic.write(Buffer.from(sendData));
-        sendData = `m_idle=${mainServoSettings.frequencies.idle}${delimiter}`;
-        characteristic.write(Buffer.from(sendData));
-
-        sendData = `l_en=${linearServoSettings.angles.engaged}${delimiter}`;
-        characteristic.write(Buffer.from(sendData));
-        sendData = `l_disen=${linearServoSettings.angles.disengaged}${delimiter}`;
-        characteristic.write(Buffer.from(sendData));
-        sendData = `l_step=${linearServoSettings.step}${delimiter}`;
-        characteristic.write(Buffer.from(sendData));
-
-        sendData = `adxl_rdcnt=${adxlSettings.max_read_count}${delimiter}`;
-        characteristic.write(Buffer.from(sendData));
-        sendData = `adxl_lk=${adxlSettings.angles.locked}${delimiter}`;
-        characteristic.write(Buffer.from(sendData));
-        sendData = `adxl_unlk=${adxlSettings.angles.unlocked}${delimiter}`;
-        characteristic.write(Buffer.from(sendData));
+          const delimiter = ';';
+          this._outboxMessageMap[this.lockMAC] = [
+            `<settings>`,
+            `m_unlk=${mainServoSettings.frequencies.unlock}${delimiter}`,
+            `m_lk=${mainServoSettings.frequencies.lock}${delimiter}`,
+            `m_idle=${mainServoSettings.frequencies.idle}${delimiter}`,
+            `l_en=${linearServoSettings.angles.engaged}${delimiter}`,
+            `l_disen=${linearServoSettings.angles.disengaged}${delimiter}`,
+            `l_step=${linearServoSettings.step}${delimiter}`,
+            `adxl_rdcnt=${adxlSettings.max_read_count}${delimiter}`,
+            `adxl_lk=${adxlSettings.angles.locked}${delimiter}`,
+            `adxl_unlk=${adxlSettings.angles.unlocked}${delimiter}`,
+            `</settings>`
+          ];
+        }, 2000);
         break;
       }
     }
