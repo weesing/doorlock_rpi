@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 export class StaticGlobals {
   setVar(varName, varVal) {
     this[varName] = varVal;
@@ -8,7 +10,7 @@ export class StaticGlobals {
   }
 
   static getInstance() {
-    if (StaticGlobals._instance === null) {
+    if (_.isNil(StaticGlobals._instance)) {
       StaticGlobals._instance = new StaticGlobals();
     }
     return StaticGlobals._instance;
