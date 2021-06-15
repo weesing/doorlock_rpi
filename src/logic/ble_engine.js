@@ -76,6 +76,15 @@ export class BLEEngine extends DataReceiver {
     return this._connectionManager;
   }
 
+  sendSetting(peripheralId, settingStr) {
+    if (!this._outboxMessageMap[peripheralId]) {
+      this._outboxMessageMap[peripheralId] = [];
+    }
+    this._outboxMessageMap[peripheralId].push(
+      `<settings>${settingStr}</settings>`
+    );
+  }
+
   async sendInitialPeripheralSync(peripheralId) {
     // Send lock MAC intialization settings
     if (peripheralId === this.lockMAC) {
@@ -93,20 +102,42 @@ export class BLEEngine extends DataReceiver {
       const linearServoSettings = _.get(config, `lock.settings.linear_servo`);
       const adxlSettings = _.get(config, `lock.settings.adxl`);
 
-      const delimiter = ';';
-      this._outboxMessageMap[this.lockMAC] = [
-        `<settings>`,
-        `m_unlk=${mainServoSettings.frequencies.unlock}${delimiter}`,
-        `m_lk=${mainServoSettings.frequencies.lock}${delimiter}`,
-        `m_idle=${mainServoSettings.frequencies.idle}${delimiter}`,
-        `l_en=${linearServoSettings.angles.engaged}${delimiter}`,
-        `l_disen=${linearServoSettings.angles.disengaged}${delimiter}`,
-        `l_step=${linearServoSettings.step}${delimiter}`,
-        `adxl_rdcnt=${adxlSettings.max_read_count}${delimiter}`,
-        `adxl_lk=${adxlSettings.angles.locked}${delimiter}`,
-        `adxl_unlk=${adxlSettings.angles.unlocked}${delimiter}`,
-        `</settings>`
-      ];
+      this.sendSetting(
+        this.lockMAC,
+        `m_unlk=${mainServoSettings.frequencies.unlock}${delimiter}`
+      );
+      this.sendSetting(
+        this.lockMAC,
+        `m_lk=${mainServoSettings.frequencies.lock}${delimiter}`
+      );
+      this.sendSetting(
+        this.lockMAC,
+        `m_idle=${mainServoSettings.frequencies.idle}${delimiter}`
+      );
+      this.sendSetting(
+        this.lockMAC,
+        `l_en=${linearServoSettings.angles.engaged}${delimiter}`
+      );
+      this.sendSetting(
+        this.lockMAC,
+        `l_disen=${linearServoSettings.angles.disengaged}${delimiter}`
+      );
+      this.sendSetting(
+        this.lockMAC,
+        `l_step=${linearServoSettings.step}${delimiter}`
+      );
+      this.sendSetting(
+        this.lockMAC,
+        `adxl_rdcnt=${adxlSettings.max_read_count}${delimiter}`
+      );
+      this.sendSetting(
+        this.lockMAC,
+        `adxl_lk=${adxlSettings.angles.locked}${delimiter}`
+      );
+      this.sendSetting(
+        this.lockMAC,
+        `adxl_unlk=${adxlSettings.angles.unlocked}${delimiter}`
+      );
     }
   }
 
