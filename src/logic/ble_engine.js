@@ -48,51 +48,39 @@ export class BLEEngine extends DataReceiver {
     return this._connectionManager;
   }
 
-  async onPeripheralSubscribed(peripheralId) {
-    super.onPeripheralSubscribed(peripheralId);
-    const characteristic =
-      this.connectionManager.getPeripheralCharacteristics(peripheralId);
-    logger.info(`Peripheral ${peripheralId} subscribed.`);
-    if (_.isNil(characteristic)) {
-      return;
-    }
+  async sendInitialPeripheralSync(peripheralId) {
+    super.sendInitialPeripheralSync(peripheralId);
 
-    switch (peripheralId) {
-      case this.lockMAC: {
-        if (
-          _.isNil(this._outboxMessageMap[this.lockMAC]) ||
-          this._outboxMessageMap[this.lockMAC].length > 0
-        ) {
-          // Clear all the outbox messages
-          this._outboxMessageMap[this.lockMAC] = [];
-        }
-        this._lockInitSettingsTimeout = setTimeout(() => {
-          // Send all the settings.
-          logger.info(`Sending settings....`);
-          const mainServoSettings = _.get(config, `lock.settings.main_servo`);
-          const linearServoSettings = _.get(
-            config,
-            `lock.settings.linear_servo`
-          );
-          const adxlSettings = _.get(config, `lock.settings.adxl`);
-
-          const delimiter = ';';
-          this._outboxMessageMap[this.lockMAC] = [
-            `<settings>`,
-            `m_unlk=${mainServoSettings.frequencies.unlock}${delimiter}`,
-            `m_lk=${mainServoSettings.frequencies.lock}${delimiter}`,
-            `m_idle=${mainServoSettings.frequencies.idle}${delimiter}`,
-            `l_en=${linearServoSettings.angles.engaged}${delimiter}`,
-            `l_disen=${linearServoSettings.angles.disengaged}${delimiter}`,
-            `l_step=${linearServoSettings.step}${delimiter}`,
-            `adxl_rdcnt=${adxlSettings.max_read_count}${delimiter}`,
-            `adxl_lk=${adxlSettings.angles.locked}${delimiter}`,
-            `adxl_unlk=${adxlSettings.angles.unlocked}${delimiter}`,
-            `</settings>`
-          ];
-        }, 2000);
-        break;
+    // Send lock MAC intialization settings
+    if (peripheralId === this.lockMAC) {
+      if (
+        _.isNil(this._outboxMessageMap[this.lockMAC]) ||
+        this._outboxMessageMap[this.lockMAC].length > 0
+      ) {
+        // Clear all the outbox messages
+        this._outboxMessageMap[this.lockMAC] = [];
       }
+
+      // Send all the settings.
+      logger.info(`Sending settings....`);
+      const mainServoSettings = _.get(config, `lock.settings.main_servo`);
+      const linearServoSettings = _.get(config, `lock.settings.linear_servo`);
+      const adxlSettings = _.get(config, `lock.settings.adxl`);
+
+      const delimiter = ';';
+      this._outboxMessageMap[this.lockMAC] = [
+        `<settings>`,
+        `m_unlk=${mainServoSettings.frequencies.unlock}${delimiter}`,
+        `m_lk=${mainServoSettings.frequencies.lock}${delimiter}`,
+        `m_idle=${mainServoSettings.frequencies.idle}${delimiter}`,
+        `l_en=${linearServoSettings.angles.engaged}${delimiter}`,
+        `l_disen=${linearServoSettings.angles.disengaged}${delimiter}`,
+        `l_step=${linearServoSettings.step}${delimiter}`,
+        `adxl_rdcnt=${adxlSettings.max_read_count}${delimiter}`,
+        `adxl_lk=${adxlSettings.angles.locked}${delimiter}`,
+        `adxl_unlk=${adxlSettings.angles.unlocked}${delimiter}`,
+        `</settings>`
+      ];
     }
   }
 

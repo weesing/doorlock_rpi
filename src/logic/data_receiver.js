@@ -9,6 +9,8 @@ export class DataReceiver {
 
     this.initPeripheralIntervals();
 
+    this.initInitialPeripheralSyncTimeout();
+
     // initialize the buffers
     this.initBuffer(this.peripheralIds);
   }
@@ -22,7 +24,7 @@ export class DataReceiver {
 
   initPeripheralInterval(peripheralId) {
     if (!_.isNil(this._outboxIntervals[peripheralId])) {
-      logger.info(`[${peripheralId}] Clearing existing outbox interval...`)
+      logger.info(`[${peripheralId}] Clearing existing outbox interval...`);
       clearInterval(this._outboxIntervals[peripheralId]);
     }
     this._outboxIntervals[peripheralId] = setInterval(() => {
@@ -41,6 +43,10 @@ export class DataReceiver {
     }
   }
 
+  initInitialPeripheralSyncTimeout() {
+    this._initialPeripheralSyncTimeout = {};
+  }
+
   initBuffer(peripheralIds = []) {
     // Create a data buffer object (PeripheralBuffer) for each peripheral
     this.peripheralBuffer = {};
@@ -55,8 +61,31 @@ export class DataReceiver {
     this.peripheralBuffer[peripheralId].clearBuffer();
   }
 
+  async sendInitialPeripheralSync(peripheralId) {
+    // Do nothing in base class.
+  }
+
   async onPeripheralSubscribed(peripheralId) {
-    // Implemented by child classes.
+    const characteristic =
+      this.connectionManager.getPeripheralCharacteristics(peripheralId);
+    logger.info(`Peripheral ${peripheralId} subscribed.`);
+    if (_.isNil(characteristic)) {
+      return;
+    }
+    if (this._initialPeripheralSyncTimeout[peripheralId]) {
+      clearTimeout(this._initialPeripheralSyncTimeout[peripheralId]);
+    }
+    this._initialPeripheralSyncTimeout[peripheralId] = setTimeout(async () => {
+      await this.sendInitialPeripheralSync(peripheralId);
+    });
+  }
+
+  async onPeripheralConnected(peripheralId) {}
+
+  async onPeripheralDisconnected(peripheralId) {
+    if (this._initialPeripheralSyncTimeout[peripheralId]) {
+      clearTimeout(this._initialPeripheralSyncTimeout[peripheralId]);
+    }
   }
 
   async onDataReceived(peripheral, data, isNotification) {

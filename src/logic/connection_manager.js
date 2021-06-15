@@ -94,7 +94,7 @@ export class ConnectionManager {
         `[${peripheral.id}] Subscribing to characteristics ${characteristic.uuid}`
       );
       characteristic.on('data', (data, isNotification) => {
-/*
+        /*
         logger.info(
           `[${peripheral.id}] Received buffer -> ${util.inspect(data, {
             depth: 10,
@@ -300,6 +300,10 @@ export class ConnectionManager {
     this.onDataReceivedFn = dataReceiver.onDataReceived.bind(dataReceiver);
     this.onPeripheralSubscribedFn =
       dataReceiver.onPeripheralSubscribed.bind(dataReceiver);
+    this.onPeripheralDisconnected =
+      dataReceiver.onPeripheralDisconnected.bind(dataReceiver);
+    this.onPeripheralConnected =
+      dataReceiver.onPeripheralConnected.bind(dataReceiver);
 
     const onScanStart = () => {
       this.isScanning = true;
