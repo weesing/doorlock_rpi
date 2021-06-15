@@ -104,39 +104,39 @@ export class BLEEngine extends DataReceiver {
 
       this.sendSetting(
         this.lockMAC,
-        `m_unlk=${mainServoSettings.frequencies.unlock}${delimiter}`
+        `m_unlk=${mainServoSettings.frequencies.unlock}`
       );
       this.sendSetting(
         this.lockMAC,
-        `m_lk=${mainServoSettings.frequencies.lock}${delimiter}`
+        `m_lk=${mainServoSettings.frequencies.lock}`
       );
       this.sendSetting(
         this.lockMAC,
-        `m_idle=${mainServoSettings.frequencies.idle}${delimiter}`
+        `m_idle=${mainServoSettings.frequencies.idle}`
       );
       this.sendSetting(
         this.lockMAC,
-        `l_en=${linearServoSettings.angles.engaged}${delimiter}`
+        `l_en=${linearServoSettings.angles.engaged}`
       );
       this.sendSetting(
         this.lockMAC,
-        `l_disen=${linearServoSettings.angles.disengaged}${delimiter}`
+        `l_disen=${linearServoSettings.angles.disengaged}`
       );
       this.sendSetting(
         this.lockMAC,
-        `l_step=${linearServoSettings.step}${delimiter}`
+        `l_step=${linearServoSettings.step}`
       );
       this.sendSetting(
         this.lockMAC,
-        `adxl_rdcnt=${adxlSettings.max_read_count}${delimiter}`
+        `adxl_rdcnt=${adxlSettings.max_read_count}`
       );
       this.sendSetting(
         this.lockMAC,
-        `adxl_lk=${adxlSettings.angles.locked}${delimiter}`
+        `adxl_lk=${adxlSettings.angles.locked}`
       );
       this.sendSetting(
         this.lockMAC,
-        `adxl_unlk=${adxlSettings.angles.unlocked}${delimiter}`
+        `adxl_unlk=${adxlSettings.angles.unlocked}`
       );
     }
   }
