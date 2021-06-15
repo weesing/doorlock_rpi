@@ -6,18 +6,39 @@ export class DataReceiver {
     // initialize all the peripheral MAC addresses.
     this.initPeripheralIds();
 
+    this.initPeripheralIntervals();
+
     // initialize the buffers
     this.initBuffer(this.peripheralIds);
+
+    // Start outbox intervals
+    this._outboxMessageMap = {};
+    this._outboxIntervals = {};
   }
 
   initPeripheralIds() {
     // To be implemented by child classes.
     this.peripheralIds = [];
 
-    this._outboxMessageMap = {};
-    this._outboxIntervals = {};
-
     return;
+  }
+
+  initPeripheralInterval(peripheralId) {
+    if (!_.isNil(this._outboxIntervals[peripheralId])) {
+      clearInterval(this._outboxIntervals[peripheralId]);
+    }
+    this._outboxIntervals[peripheralId] = setInterval(() => {
+      this.sendOldestPeripheralMessage(peripheralId);
+    }, 500);
+  }
+
+  initPeripheralIntervals() {
+    for (const peripheralId of this.peripheralIds) {
+      logger.info(
+        `Intializing outbox intervals for peripheral ${peripheralId}`
+      );
+      this.initPeripheralInterval(peripheralId);
+    }
   }
 
   initBuffer(peripheralIds = []) {

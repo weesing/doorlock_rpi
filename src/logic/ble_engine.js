@@ -30,15 +30,6 @@ export class BLEEngine extends DataReceiver {
     }
   }
 
-  initPeripheralInterval(peripheralId) {
-    if (!_.isNil(this._outboxIntervals[peripheralId])) {
-      clearInterval(this._outboxIntervals[peripheralId]);
-    }
-    this._outboxIntervals[peripheralId] = setInterval(() => {
-      this.sendOldestPeripheralMessage(peripheralId);
-    }, 500);
-  }
-
   initPeripheralIds() {
     super.initPeripheralIds();
 
@@ -51,10 +42,6 @@ export class BLEEngine extends DataReceiver {
     this.peripheralIds = [this.rfidMAC, this.lockMAC];
 
     this.meMAC = secrets.nodeMAC.toLowerCase();
-
-    // Start outbox intervals
-    this.initPeripheralInterval(this.rfidMAC);
-    this.initPeripheralInterval(this.lockMAC);
   }
 
   get connectionManager() {
