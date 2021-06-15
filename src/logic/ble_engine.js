@@ -34,7 +34,10 @@ export class BLEEngine extends DataReceiver {
   }
 
   initPeripheralInterval(peripheralId) {
-    this.outboxInterval[peripheralId] = setInterval(() => {
+    if (!_.isNil(this._outboxIntervals[peripheralId])) {
+      clearInterval(this._outboxIntervals[peripheralId]);
+    }
+    this._outboxIntervals[peripheralId] = setInterval(() => {
       this.sendOldestPeripheralMessage(peripheralId);
     }, 500);
   }
