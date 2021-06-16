@@ -173,24 +173,20 @@ export class BLEEngine extends DataReceiver {
   async onDataReceived(peripheral, data, isNotification) {
     super.onDataReceived(peripheral, data, isNotification);
     const peripheralId = peripheral.id;
-    if (peripheralId === this.rfidMAC || peripheralId === this.lockMAC) {
-      switch (peripheralId) {
-        case this.rfidMAC: {
-          const lockCharacteristic =
-            this.connectionManager.connectionStatuses[this.lockMAC]
-              .characteristic;
-          if (!lockCharacteristic) {
-            logger.info(`Door lock not connected yet, aborting data sending.`);
-            return;
-          }
-          lockCharacteristic.write(data);
-          break;
-        }
-        case this.lockMAC: {
-          // Do nothing.
-          break;
-        }
+    if (peripheralId === this.rfidMAC) {
+      const lockCharacteristic =
+        this.connectionManager.connectionStatuses[this.lockMAC].characteristic;
+      if (!lockCharacteristic) {
+        logger.info(`Door lock not connected yet, aborting data sending.`);
+        return;
       }
+
+      // TODO: Examine the data sent and forward to lock
+      const history = this.peripheralBuffer[peripheralId].dataStringHistory;
+      logger.info(history.map(curr => {
+        return Buffer.from(history.dataString);
+      }));
+      // lockCharacteristic.write(data);
     }
   }
 
