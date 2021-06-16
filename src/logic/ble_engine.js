@@ -163,6 +163,10 @@ export class BLEEngine extends DataReceiver {
     if (this._initialPeripheralSyncTimeout[peripheralId]) {
       clearTimeout(this._initialPeripheralSyncTimeout[peripheralId]);
     }
+    if (!_.isNil(this._outboxIntervals[peripheralId])) {
+      logger.info(`[${peripheralId}] Clearing existing outbox interval...`);
+      clearInterval(this._outboxIntervals[peripheralId]);
+    }
   }
 
   async onDataReceived(peripheral, data, isNotification) {
