@@ -93,7 +93,7 @@ export class BLEEngine extends DataReceiver {
     this.sendCommand(peripheralId, `setting`, settingStr);
   }
 
-  async sendPeripheralSettings(peripheralId) {
+  sendPeripheralSettings(peripheralId) {
     // Send lock MAC intialization settings
     if (peripheralId === this.lockMAC) {
       if (
@@ -155,8 +155,8 @@ export class BLEEngine extends DataReceiver {
     if (this._initialPeripheralSyncTimeout[peripheralId]) {
       clearTimeout(this._initialPeripheralSyncTimeout[peripheralId]);
     }
-    this._initialPeripheralSyncTimeout[peripheralId] = setTimeout(async () => {
-      await this.sendPeripheralSettings(peripheralId);
+    this._initialPeripheralSyncTimeout[peripheralId] = setTimeout(() => {
+      this.sendPeripheralSettings(peripheralId);
     });
   }
 
