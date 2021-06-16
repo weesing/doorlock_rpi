@@ -56,8 +56,6 @@ export class ConnectionManager {
       peripheral,
       characteristic
     });
-    const buffer = Buffer.from('connected');
-    characteristic.write(buffer);
 
     if (this.onPeripheralSubscribedFn) {
       // Callback on peripheral subscribed
