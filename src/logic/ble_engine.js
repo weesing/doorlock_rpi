@@ -155,7 +155,7 @@ export class BLEEngine extends DataReceiver {
     }
     this._initialPeripheralSyncTimeout[peripheralId] = setTimeout(() => {
       this.sendPeripheralSettings(peripheralId);
-    });
+    }, _.get(config, `lock.timeout`));
   }
 
   async onPeripheralDisconnected(peripheralId) {

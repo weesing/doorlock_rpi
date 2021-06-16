@@ -12,6 +12,7 @@
     }
   },
   "lock": {
+    "timeout": 2000,
     "settings": {
       "main_servo": {
         "frequencies": {
