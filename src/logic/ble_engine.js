@@ -77,7 +77,7 @@ export class BLEEngine extends DataReceiver {
   }
 
   sendData(peripheralId, keyStr) {
-    if (!_this.outboxMessageMap[peripheralId]) {
+    if (!this._outboxMessageMap[peripheralId]) {
       this._outboxMessageMap[peripheralId] = [];
     }
     this._outboxMessageMap[peripheralId].push(`<data>`);
