@@ -15,3 +15,17 @@ router.post('/init', function (req, res, next) {
     message: 'Initialization triggered'
   });
 });
+
+router.post('/data', function (req, res, next) {
+  const body = req.body;
+  const peripheralId = body.peripheralId.toLowerCase();
+  const data = body.data;
+  if (peripheralId) {
+    StaticGlobals.getInstance()
+      .getVar('ble_engine')
+      .sendData(peripheralId, data);
+  }
+  res.jsonp({
+    message: `Data ${data} sent to ${peripheralId}`
+  });
+});
