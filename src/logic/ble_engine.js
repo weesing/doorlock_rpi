@@ -76,13 +76,22 @@ export class BLEEngine extends DataReceiver {
     return this._connectionManager;
   }
 
+  sendData(peripheralId, keyStr) {
+    if (!_this.outboxMessageMap[peripheralId]) {
+      this._outboxMessageMap[peripheralId] = [];
+    }
+    this._outboxMessageMap[peripheralId].push(`<data>`);
+    this._outboxMessageMap[peripheralId].push(keyStr);
+    this._outboxMessageMap[peripheralId].push(`</data>`);
+  }
+
   sendSetting(peripheralId, settingStr) {
     if (!this._outboxMessageMap[peripheralId]) {
       this._outboxMessageMap[peripheralId] = [];
     }
-    this._outboxMessageMap[peripheralId].push(
-      `<settings>${settingStr}</settings>`
-    );
+    this._outboxMessageMap[peripheralId].push(`<settings>`);
+    this._outboxMessageMap[peripheralId].push(settingStr);
+    this._outboxMessageMap[peripheralId].push(`</settings>`);
   }
 
   async sendInitialPeripheralSync(peripheralId) {
