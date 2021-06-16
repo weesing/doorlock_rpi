@@ -38,10 +38,10 @@ export class DataReceiver {
 
   async onPeripheralDisconnected(peripheralId) {}
 
-  async onDataReceived(peripheral, data, isNotification) {
+  async onDataReceived(peripheral, bufferData, isNotification) {
     const peripheralId = peripheral.id;
     if (this.peripheralBuffer[peripheralId]) {
-      this.peripheralBuffer[peripheralId].appendBuffer(data);
+      this.peripheralBuffer[peripheralId].appendBuffer(bufferData);
       const buffer = this.peripheralBuffer[peripheralId].buffer;
       const history = this.peripheralBuffer[peripheralId].dataStringHistory;
     } else {

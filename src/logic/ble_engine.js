@@ -177,8 +177,8 @@ export class BLEEngine extends DataReceiver {
     }
   }
 
-  async onDataReceived(peripheral, data, isNotification) {
-    super.onDataReceived(peripheral, data, isNotification);
+  async onDataReceived(peripheral, bufferData, isNotification) {
+    super.onDataReceived(peripheral, bufferData, isNotification);
     const peripheralId = peripheral.id;
     if (peripheralId === this.rfidMAC) {
       const lockCharacteristic =
@@ -190,9 +190,9 @@ export class BLEEngine extends DataReceiver {
 
       // TODO: Examine the data sent and forward to lock
       const testKey = Buffer.from('ffFFffFF', 'hex');
-      if (Buffer.compare(data, testKey) === 0) {
+      if (Buffer.compare(bufferData, testKey) === 0) {
         logger.info(`Authorized! Sending data.`);
-        this.sendData(this.lockMAC, data.toString());
+        this.sendData(this.lockMAC, bufferData.toString());
       } else {
         logger.warn(`Unauthorized!`);
       }
