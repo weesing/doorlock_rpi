@@ -81,8 +81,9 @@ export class BLEEngine extends DataReceiver {
       this._outboxMessageMap[peripheralId] = [];
     }
     this._outboxMessageMap[peripheralId].push(`<${commandName}>`);
-    this._outboxMessageMap[peripheralId].push(payload);
-    this._outboxMessageMap[peripheralId].push(`</${commandName}>`);
+    this._outboxMessageMap[peripheralId].push(
+      `${payload}${_.get(config, `engine.outbox.delimiter`, `;`)}`
+    );
   }
 
   sendData(peripheralId, payload) {

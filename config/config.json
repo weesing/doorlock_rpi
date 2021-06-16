@@ -7,6 +7,7 @@
   },
   "engine": {
     "outbox": {
+      "delimiter": ";",
       "flush_interval": 100
     }
   },
