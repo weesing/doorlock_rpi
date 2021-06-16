@@ -96,10 +96,7 @@ export class BLEEngine extends DataReceiver {
   sendPeripheralSettings(peripheralId) {
     // Send lock MAC intialization settings
     if (peripheralId === this.lockMAC) {
-      if (
-        _.isNil(this._outboxMessageMap[this.lockMAC]) ||
-        this._outboxMessageMap[this.lockMAC].length > 0
-      ) {
+      if (_.isNil(this._outboxMessageMap[this.lockMAC])) {
         // Clear all the outbox messages
         this._outboxMessageMap[this.lockMAC] = [];
       }
