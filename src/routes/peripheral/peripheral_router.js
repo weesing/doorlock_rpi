@@ -3,7 +3,13 @@ import { StaticGlobals } from '../../lib/static_globals';
 
 export let router = express.Router();
 
-router.post('/init', function (req, res, next) {
+router.get('/settings', (req, res, next) => {
+  res.jsonp({
+    message: 'WIP'
+  });
+});
+
+router.post('/settings', (req, res, next) => {
   const body = req.body;
   const peripheralId = body.peripheralId.toLowerCase();
   if (peripheralId) {
@@ -14,7 +20,7 @@ router.post('/init', function (req, res, next) {
   });
 });
 
-router.post('/data', function (req, res, next) {
+router.post('/data', (req, res, next) => {
   const body = req.body;
   const peripheralId = body.peripheralId.toLowerCase();
   const data = body.data;
