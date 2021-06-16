@@ -4,5 +4,30 @@
       "service_uuid": "ffe0",
       "characteristic_uuid": "ffe1"
     }
+  },
+  "lock": {
+    "settings": {
+      "main_servo": {
+        "frequencies": {
+          "unlock": 1800,
+          "lock": 1200,
+          "idle": 1500
+        }
+      },
+      "linear_servo": {
+        "angles": {
+          "engaged": 82,
+          "disengaged": 50
+        },
+        "step": 4
+      },
+      "adxl": {
+        "max_read_count": 5,
+        "angles": {
+          "locked": 580,
+          "unlocked": 436
+        }
+      }
+    }
   }
 }

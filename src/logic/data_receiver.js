@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import { PeripheralBuffer } from '../peripheral/peripheral_buffer';
 import logger from '../lib/logger';
 
@@ -13,6 +14,7 @@ export class DataReceiver {
   initPeripheralIds() {
     // To be implemented by child classes.
     this.peripheralIds = [];
+
     return;
   }
 
@@ -30,14 +32,18 @@ export class DataReceiver {
     this.peripheralBuffer[peripheralId].clearBuffer();
   }
 
+  async onPeripheralSubscribed(peripheralId) {}
+
+  async onPeripheralConnected(peripheralId) {}
+
+  async onPeripheralDisconnected(peripheralId) {}
+
   async onDataReceived(peripheral, data, isNotification) {
     const peripheralId = peripheral.id;
     if (this.peripheralBuffer[peripheralId]) {
       this.peripheralBuffer[peripheralId].appendBuffer(data);
       const buffer = this.peripheralBuffer[peripheralId].buffer;
       const history = this.peripheralBuffer[peripheralId].dataStringHistory;
-      logger.info(`[${peripheralId}] Peripheral buffer '${buffer}'`);
-      logger.info(`[${peripheralId}] Peripheral history ${history}`);
     } else {
       logger.warn(`[${peripheralId}] Received data from unknown device.`);
     }

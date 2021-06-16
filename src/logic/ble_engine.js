@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import config from '../lib/config';
 import logger from '../lib/logger';
 import { SecretsLoader } from '../lib/secrets_loader';
 import { ConnectionManager } from './connection_manager';
@@ -9,6 +10,9 @@ export class BLEEngine extends DataReceiver {
     super();
 
     this._connectionManager = null;
+
+    this.initPeripheralIntervals();
+    this.initInitialPeripheralSyncTimeout();
   }
 
   initPeripheralIds() {
@@ -25,8 +29,143 @@ export class BLEEngine extends DataReceiver {
     this.meMAC = secrets.nodeMAC.toLowerCase();
   }
 
+  sendOldestPeripheralMessage(peripheralId) {
+    if (
+      !_.isNil(this._outboxMessageMap[peripheralId]) &&
+      this._outboxMessageMap[peripheralId].length > 0
+    ) {
+      // get characteristic for sending.
+      const characteristic =
+        this.connectionManager.getPeripheralCharacteristics(peripheralId);
+      if (_.isNil(characteristic)) {
+        return;
+      }
+      // send oldest message
+      const pending = this._outboxMessageMap[peripheralId].shift();
+      logger.info(`[${peripheralId}] Sending ${pending} to ${peripheralId}`);
+      characteristic.write(Buffer.from(pending));
+    }
+  }
+
+  initPeripheralInterval(peripheralId) {
+    if (!_.isNil(this._outboxIntervals[peripheralId])) {
+      logger.info(`[${peripheralId}] Clearing existing outbox interval...`);
+      clearInterval(this._outboxIntervals[peripheralId]);
+    }
+    this._outboxIntervals[peripheralId] = setInterval(() => {
+      this.sendOldestPeripheralMessage(peripheralId);
+    }, 200);
+  }
+
+  initPeripheralIntervals() {
+    this._outboxMessageMap = {};
+    this._outboxIntervals = {};
+    for (const peripheralId of this.peripheralIds) {
+      logger.info(
+        `Intializing outbox intervals for peripheral ${peripheralId}`
+      );
+      this.initPeripheralInterval(peripheralId);
+    }
+  }
+
+  initInitialPeripheralSyncTimeout() {
+    this._initialPeripheralSyncTimeout = {};
+  }
+
   get connectionManager() {
     return this._connectionManager;
+  }
+
+  sendCommand(peripheralId, commandName, payload) {
+    if (!this._outboxMessageMap[peripheralId]) {
+      this._outboxMessageMap[peripheralId] = [];
+    }
+    this._outboxMessageMap[peripheralId].push(`<${commandName}>`);
+    this._outboxMessageMap[peripheralId].push(payload);
+    this._outboxMessageMap[peripheralId].push(`</${commandName}>`);
+  }
+
+  sendData(peripheralId, payload) {
+    this.sendCommand(peripheralId, `data`, payload);
+  }
+
+  sendSetting(peripheralId, settingStr) {
+    this.sendCommand(peripheralId, `setting`, settingStr);
+  }
+
+  async sendPeripheralSettings(peripheralId) {
+    // Send lock MAC intialization settings
+    if (peripheralId === this.lockMAC) {
+      if (
+        _.isNil(this._outboxMessageMap[this.lockMAC]) ||
+        this._outboxMessageMap[this.lockMAC].length > 0
+      ) {
+        // Clear all the outbox messages
+        this._outboxMessageMap[this.lockMAC] = [];
+      }
+
+      // Send all the settings.
+      logger.info(`Sending settings....`);
+      const mainServoSettings = _.get(config, `lock.settings.main_servo`);
+      const linearServoSettings = _.get(config, `lock.settings.linear_servo`);
+      const adxlSettings = _.get(config, `lock.settings.adxl`);
+
+      this.sendSetting(
+        this.lockMAC,
+        `m_unlk=${mainServoSettings.frequencies.unlock}`
+      );
+      this.sendSetting(
+        this.lockMAC,
+        `m_lk=${mainServoSettings.frequencies.lock}`
+      );
+      this.sendSetting(
+        this.lockMAC,
+        `m_idle=${mainServoSettings.frequencies.idle}`
+      );
+      this.sendSetting(
+        this.lockMAC,
+        `l_en=${linearServoSettings.angles.engaged}`
+      );
+      this.sendSetting(
+        this.lockMAC,
+        `l_disen=${linearServoSettings.angles.disengaged}`
+      );
+      this.sendSetting(this.lockMAC, `l_step=${linearServoSettings.step}`);
+      this.sendSetting(
+        this.lockMAC,
+        `adxl_rdcnt=${adxlSettings.max_read_count}`
+      );
+      this.sendSetting(this.lockMAC, `adxl_lk=${adxlSettings.angles.locked}`);
+      this.sendSetting(
+        this.lockMAC,
+        `adxl_unlk=${adxlSettings.angles.unlocked}`
+      );
+    }
+  }
+
+  async onPeripheralSubscribed(peripheralId) {
+    super.onPeripheralSubscribed(peripheralId);
+
+    const characteristic =
+      this.connectionManager.getPeripheralCharacteristics(peripheralId);
+    logger.info(`Peripheral ${peripheralId} subscribed.`);
+    if (_.isNil(characteristic)) {
+      return;
+    }
+    if (this._initialPeripheralSyncTimeout[peripheralId]) {
+      clearTimeout(this._initialPeripheralSyncTimeout[peripheralId]);
+    }
+    this._initialPeripheralSyncTimeout[peripheralId] = setTimeout(async () => {
+      await this.sendPeripheralSettings(peripheralId);
+    });
+  }
+
+  async onPeripheralDisconnected(peripheralId) {
+    super.onPeripheralDisconnected(peripheralId);
+
+    if (this._initialPeripheralSyncTimeout[peripheralId]) {
+      clearTimeout(this._initialPeripheralSyncTimeout[peripheralId]);
+    }
   }
 
   async onDataReceived(peripheral, data, isNotification) {
@@ -36,7 +175,7 @@ export class BLEEngine extends DataReceiver {
       switch (peripheralId) {
         case this.rfidMAC: {
           const lockCharacteristic =
-            this.connectionManager.peripheralStatuses[this.lockMAC]
+            this.connectionManager.connectionStatuses[this.lockMAC]
               .characteristic;
           if (!lockCharacteristic) {
             logger.info(`Door lock not connected yet, aborting data sending.`);
