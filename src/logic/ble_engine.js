@@ -43,7 +43,14 @@ export class BLEEngine extends DataReceiver {
       // send oldest message
       const pending = this._outboxMessageMap[peripheralId].shift();
       logger.info(`[${peripheralId}] Sending ${pending} to ${peripheralId}`);
-      characteristic.write(Buffer.from(pending));
+      try {
+        characteristic.write(Buffer.from(pending));
+      } catch (e) {
+        // Error. Put back the message.
+        this._outboxMessageMap.unshift(pending);
+        logger.error(`[${peripheralId}] Error writing into characteristics`);
+        logger.error(e);
+      }
     }
   }
 
