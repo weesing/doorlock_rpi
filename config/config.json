@@ -5,6 +5,11 @@
       "characteristic_uuid": "ffe1"
     }
   },
+  "engine": {
+    "outbox": {
+      "flush_interval": 500
+    }
+  },
   "lock": {
     "settings": {
       "main_servo": {
