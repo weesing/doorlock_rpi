@@ -76,25 +76,24 @@ export class BLEEngine extends DataReceiver {
     return this._connectionManager;
   }
 
-  sendData(peripheralId, keyStr) {
+  sendCommand(peripheralId, commandName, payload) {
     if (!this._outboxMessageMap[peripheralId]) {
       this._outboxMessageMap[peripheralId] = [];
     }
-    this._outboxMessageMap[peripheralId].push(`<data>`);
-    this._outboxMessageMap[peripheralId].push(keyStr);
-    this._outboxMessageMap[peripheralId].push(`</data>`);
+    this._outboxMessageMap[peripheralId].push(`<${commandName}>`);
+    this._outboxMessageMap[peripheralId].push(payload);
+    this._outboxMessageMap[peripheralId].push(`</${commandName}>`);
+  }
+
+  sendData(peripheralId, payload) {
+    this.sendCommand(peripheralId, `data`, payload);
   }
 
   sendSetting(peripheralId, settingStr) {
-    if (!this._outboxMessageMap[peripheralId]) {
-      this._outboxMessageMap[peripheralId] = [];
-    }
-    this._outboxMessageMap[peripheralId].push(`<settings>`);
-    this._outboxMessageMap[peripheralId].push(settingStr);
-    this._outboxMessageMap[peripheralId].push(`</settings>`);
+    this.sendCommand(peripheralId, `setting`, settingStr);
   }
 
-  async sendInitialPeripheralSync(peripheralId) {
+  async sendPeripheralSettings(peripheralId) {
     // Send lock MAC intialization settings
     if (peripheralId === this.lockMAC) {
       if (
@@ -131,18 +130,12 @@ export class BLEEngine extends DataReceiver {
         this.lockMAC,
         `l_disen=${linearServoSettings.angles.disengaged}`
       );
-      this.sendSetting(
-        this.lockMAC,
-        `l_step=${linearServoSettings.step}`
-      );
+      this.sendSetting(this.lockMAC, `l_step=${linearServoSettings.step}`);
       this.sendSetting(
         this.lockMAC,
         `adxl_rdcnt=${adxlSettings.max_read_count}`
       );
-      this.sendSetting(
-        this.lockMAC,
-        `adxl_lk=${adxlSettings.angles.locked}`
-      );
+      this.sendSetting(this.lockMAC, `adxl_lk=${adxlSettings.angles.locked}`);
       this.sendSetting(
         this.lockMAC,
         `adxl_unlk=${adxlSettings.angles.unlocked}`
@@ -163,7 +156,7 @@ export class BLEEngine extends DataReceiver {
       clearTimeout(this._initialPeripheralSyncTimeout[peripheralId]);
     }
     this._initialPeripheralSyncTimeout[peripheralId] = setTimeout(async () => {
-      await this.sendInitialPeripheralSync(peripheralId);
+      await this.sendPeripheralSettings(peripheralId);
     });
   }
 
