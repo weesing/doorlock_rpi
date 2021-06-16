@@ -182,10 +182,13 @@ export class BLEEngine extends DataReceiver {
       }
 
       // TODO: Examine the data sent and forward to lock
-      const history = this.peripheralBuffer[peripheralId].dataStringHistory;
-      logger.info(history.map(curr => {
-        return Buffer.from(history.dataString);
-      }));
+      const testKey = Buffer.from('ffFFffFF', 'hex');
+      if (Buffer.compare(data, testKey) === 0) {
+        logger.info(`Authorized! Sending data.`);
+        this.sendData(this.lockMAC, data.toString());
+      } else {
+        logger.warn(`Unauthorized!`);
+      }
       // lockCharacteristic.write(data);
     }
   }
