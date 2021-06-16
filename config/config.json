@@ -7,7 +7,7 @@
   },
   "engine": {
     "outbox": {
-      "flush_interval": 500
+      "flush_interval": 200
     }
   },
   "lock": {
