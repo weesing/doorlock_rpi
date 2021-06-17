@@ -1,5 +1,4 @@
 import express from 'express';
-import { StaticGlobals } from '../../lib/static_globals';
 import { CardsLogic } from '../logic/cards';
 
 export let router = express.Router();
