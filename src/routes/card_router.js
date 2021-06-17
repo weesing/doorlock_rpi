@@ -4,13 +4,13 @@ import { CardsLogic } from '../logic/cards';
 
 export let router = express.Router();
 
-router.get('/', (req, res, next) => {
+router.get('/', async (req, res, next) => {
   res.jsonp({
     message: 'WIP'
   });
 });
 
-router.post('/', (req, res, next) => {
+router.post('/', async (req, res, next) => {
   const body = req.body;
   const cardId = body.cardId.toLowerCase();
   if (cardId) {
@@ -21,7 +21,7 @@ router.post('/', (req, res, next) => {
   });
 });
 
-router.delete('/', (req, res, next) => {
+router.delete('/', async (req, res, next) => {
   const body = req.body;
   const cardId = body.cardId.toLowerCase();
   if (cardId) {
