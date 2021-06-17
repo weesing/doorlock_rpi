@@ -1,5 +1,5 @@
 import express from 'express';
-import { StaticGlobals } from '../../lib/static_globals';
+import { StaticGlobals } from '../lib/static_globals';
 
 export let router = express.Router();
 
