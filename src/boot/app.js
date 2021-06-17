@@ -5,7 +5,8 @@ import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 
 import { router as indexRouter } from '../routes/index_router';
-import { router as peripheralRouter } from '../routes/peripheral/peripheral_router';
+import { router as peripheralRouter } from '../routes/peripheral_router';
+import { router as cardRouter } from '../routes/card_router';
 
 export let app = express();
 
@@ -21,6 +22,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/peripheral', peripheralRouter);
+app.use('/card', cardRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
