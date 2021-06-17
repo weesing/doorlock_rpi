@@ -4,9 +4,8 @@ import { CardsLogic } from '../logic/cards';
 export let router = express.Router();
 
 router.get('/', async (req, res, next) => {
-  res.jsonp({
-    message: 'WIP'
-  });
+  const keys = await CardsLogic.getInstance().getKeys();
+  res.jsonp({ keys });
 });
 
 router.post('/', async (req, res, next) => {
