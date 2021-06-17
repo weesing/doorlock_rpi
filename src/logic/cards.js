@@ -16,6 +16,10 @@ export class CardsLogic {
     return await this.redisClient.sadd(`key_list`, newKey);
   }
 
+  async removeKey(key) {
+    return await this.redisClient.srem(`key_list`, key);
+  }
+
   async getKeys() {
     return await this.redisClient.smembers(`key_list`);
   }

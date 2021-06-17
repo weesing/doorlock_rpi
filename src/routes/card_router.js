@@ -24,7 +24,7 @@ router.delete('/', async (req, res, next) => {
   const body = req.body;
   const cardId = body.cardId.toLowerCase();
   if (cardId) {
-    // TODO: Delete card ID
+    await CardsLogic.getInstance().removeKey(cardId);
   }
   res.jsonp({
     message: `Card ID ${cardId} deleted`
