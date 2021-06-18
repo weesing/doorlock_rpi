@@ -32,7 +32,7 @@ export class BLEEngine extends DataReceiver {
   popPeripheralMessage(peripheralId) {
     // get characteristic for sending.
     const characteristic =
-      this.connectionManager.getPeripheralCharacteristics(peripheralId);
+      this.connectionManager.getPeripheralCharacteristic(peripheralId);
     if (_.isNil(characteristic)) {
       return;
     }
@@ -110,9 +110,11 @@ export class BLEEngine extends DataReceiver {
     this.sendCommand(peripheralId, `data`, payload);
   }
 
+  /*
   sendSetting(peripheralId, settingStr) {
     this.sendCommand(peripheralId, `setting`, settingStr);
   }
+  */
 
   sendPeripheralSettings(peripheralId) {
     // Send lock MAC intialization settings
@@ -128,6 +130,45 @@ export class BLEEngine extends DataReceiver {
       const linearServoSettings = _.get(config, `lock.settings.linear_servo`);
       const adxlSettings = _.get(config, `lock.settings.adxl`);
 
+      this.sendCommand(
+        this.lockMAC,
+        `m_xlk`,
+        `${mainServoSettings.frequences.unlock}`
+      );
+      this.sendCommand(
+        this.lockMAC,
+        `m_lk`,
+        `${mainServoSettings.frequencies.lock}`
+      );
+      this.sendCommand(
+        this.lockMAC,
+        `m_idl`,
+        `${mainServoSettings.frequencies.idle}`
+      );
+      this.sendCommand(
+        this.lockMAC,
+        `l_en`,
+        `${linearServoSettings.angles.engaged}`
+      );
+      this.sendCommand(
+        this.lockMAC,
+        `l_xen`,
+        `${linearServoSettings.angles.disengaged}`
+      );
+      this.sendCommand(this.lockMAC, `l_step`, `${linearServoSettings.step}`);
+      this.sendCommand(
+        this.lockMAC,
+        `a_rdct`,
+        `${adxlSettings.max_read_count}`
+      );
+      this.sendCommand(this.lockMAC, `a_lk`, `${adxlSettings.angles.locked}`);
+      this.sendCommand(
+        this.lockMAC,
+        `a_xlk`,
+        `${adxlSettings.angles.unlocked}`
+      );
+
+      /*
       this.sendSetting(
         this.lockMAC,
         `m_unlk=${mainServoSettings.frequencies.unlock}`
@@ -158,6 +199,7 @@ export class BLEEngine extends DataReceiver {
         this.lockMAC,
         `adxl_unlk=${adxlSettings.angles.unlocked}`
       );
+      */
     }
   }
 
@@ -165,7 +207,7 @@ export class BLEEngine extends DataReceiver {
     super.onPeripheralSubscribed(peripheralId);
 
     const characteristic =
-      this.connectionManager.getPeripheralCharacteristics(peripheralId);
+      this.connectionManager.getPeripheralCharacteristic(peripheralId);
     logger.info(`Peripheral ${peripheralId} subscribed.`);
     if (_.isNil(characteristic)) {
       return;

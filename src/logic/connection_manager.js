@@ -30,19 +30,44 @@ export class ConnectionManager {
     this.dataReceiver = null;
     this.onDataReceivedFn = null;
     this.onPeripheralSubscribedFn = null;
+
+    this.heartbeatIntervals = {};
   }
 
   get connectionStatuses() {
     return this._connectionStatuses;
   }
 
-  getPeripheralCharacteristics(peripheralId) {
+  getPeripheralCharacteristic(peripheralId) {
     const status = this._connectionStatuses[peripheralId];
     if (!status || status.status !== PERIPHERAL_STATE_SUBSCRIBED) {
       return null;
     }
 
     return status.characteristic;
+  }
+
+  sendHeartbeat(peripheralId) {
+    const characteristic = this.getPeripheralCharacteristic(peripheralId);
+    if (!characteristic) {
+      return;
+    }
+    // No pending messages, send heartbeat
+    try {
+      characteristic.write(Buffer.from('<hb>;'));
+    } catch (e) {
+      logger.error(`[${peripheralId}] Error sending heartbeat`);
+      logger.error(e);
+    }
+  }
+
+  createPeripheralHeartbeatInterval(peripheralId) {
+    if (this.heartbeatIntervals[peripheralId]) {
+      clearInterval(this.heartbeatIntervals);
+    }
+    this.heartbeatIntervals[peripheralId] = setInterval(() => {
+      this.sendHeartbeat(peripheralId);
+    }, _.get(config, `heartbeat.interval_ms`, 1000));
   }
 
   onPeripheralSubscribed(peripheral, characteristic) {
