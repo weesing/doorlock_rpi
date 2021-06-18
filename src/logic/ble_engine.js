@@ -95,10 +95,15 @@ export class BLEEngine extends DataReceiver {
     if (!this._outboxMessageMap[peripheralId]) {
       this._outboxMessageMap[peripheralId] = [];
     }
-    this._outboxMessageMap[peripheralId].push(`<${commandName}>`);
+    const delimiter = _.get(config, `engine.outbox.delimiter`, `;`);
+    this._outboxMessageMap[peripheralId].push(
+      `<${commandName}>${payload}${delimiter}`
+    );
+    /*
     this._outboxMessageMap[peripheralId].push(
       `${payload}${_.get(config, `engine.outbox.delimiter`, `;`)}`
     );
+    */
   }
 
   toggleLock() {
