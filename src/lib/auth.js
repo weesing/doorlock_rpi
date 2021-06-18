@@ -1,7 +1,7 @@
 import { SecretsLoader } from "./secrets_loader";
 
 export function isValidRequest(req) {
-  const reqAuthSecret = req.body['auth'] || req.params['auth'];
+  const reqAuthSecret = req.body['auth'] || req.query['auth'];
   if (!reqAuthSecret) {
     return false;
   }
