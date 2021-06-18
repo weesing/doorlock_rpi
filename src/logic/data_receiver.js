@@ -54,6 +54,6 @@ export class DataReceiver {
     if (!buffer) {
       return [];
     }
-    return buffer[dataStringHistory];
+    return buffer.dataStringHistory;
   }
 }
