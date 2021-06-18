@@ -51,7 +51,7 @@ export class BLEEngine extends DataReceiver {
         logger.error(`[${peripheralId}] Error writing into characteristics`);
         logger.error(e);
       }
-    } else if (this._outboxMessageMap[peripheralId].length === 0) {
+    } else {
       // No pending messages, send heartbeat
       try {
         characteristic.write(Buffer.from('<hb>;'));
