@@ -93,6 +93,11 @@ export class BLEEngine extends DataReceiver {
     );
   }
 
+  toggleLock() {
+    const lockSecret = SecretsLoader.loadSecrets()['lockSecret'];
+    this.sendCommand(this.lockMAC, `lock`, lockSecret);
+  }
+
   sendData(peripheralId, payload) {
     this.sendCommand(peripheralId, `data`, payload);
   }
@@ -192,7 +197,7 @@ export class BLEEngine extends DataReceiver {
       const testKey = Buffer.from('ffFFffFF', 'hex');
       if (Buffer.compare(bufferData, testKey) === 0) {
         logger.info(`Authorized! Sending data.`);
-        this.sendData(this.lockMAC, bufferData.toString());
+        this.toggleLock();
       } else {
         logger.warn(`Unauthorized!`);
       }
