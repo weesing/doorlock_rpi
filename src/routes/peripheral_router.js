@@ -35,3 +35,17 @@ router.post('/data', (req, res, next) => {
     message: `Data ${data} sent to ${peripheralId}`
   });
 });
+
+router.get('/buffer/history', (req, res, next) => {
+  const body = req.body;
+  const peripheralId = body.peripheralId.toLowerCase();
+  let history = [];
+  if (peripheralId) {
+    history = StaticGlobals.getInstance()
+      .getVar('ble_engine')
+      .getPeripheralHistory(peripheralId);
+  }
+  res.jsonp({
+    history
+  });
+});

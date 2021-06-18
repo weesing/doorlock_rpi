@@ -48,4 +48,12 @@ export class DataReceiver {
       logger.warn(`[${peripheralId}] Received data from unknown device.`);
     }
   }
+
+  getPeripheralHistory(peripheralId) {
+    const buffer = this.peripheralBuffer[peripheralId];
+    if (!buffer) {
+      return [];
+    }
+    return buffer[dataStringHistory];
+  }
 }
