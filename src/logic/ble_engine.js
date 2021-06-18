@@ -138,7 +138,7 @@ export class BLEEngine extends DataReceiver {
       this.sendCommand(
         this.lockMAC,
         `m_xlk`,
-        `${mainServoSettings.frequences.unlock}`
+        `${mainServoSettings.frequencies.unlock}`
       );
       this.sendCommand(
         this.lockMAC,
