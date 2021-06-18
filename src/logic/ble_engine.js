@@ -47,7 +47,7 @@ export class BLEEngine extends DataReceiver {
         characteristic.write(Buffer.from(pending));
       } catch (e) {
         // Error. Put back the message.
-        this._outboxMessageMap.unshift(pending);
+        this._outboxMessageMap[peripheralId].unshift(pending);
         logger.error(`[${peripheralId}] Error writing into characteristics`);
         logger.error(e);
       }
