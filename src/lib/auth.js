@@ -1,10 +1,18 @@
 import { SecretsLoader } from './secrets_loader';
 
-export function isValidRequest(req) {
+export function isValidRequest(req, res, next) {
   const reqApiKey = req.headers[`api_key`];
   if (!reqApiKey) {
-    return false;
+    res.status(401);
+    res.send();
+    return;
   }
   const apiKey = SecretsLoader.loadSecrets()['apiKey'];
-  return reqApiKey === apiKey;
+  if (reqApiKey !== apiKey) {
+    res.status(401);
+    res.send();
+    return;
+  }
+
+  next(req, res);
 }

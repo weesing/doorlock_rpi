@@ -5,23 +5,23 @@ import { CardsLogic } from '../logic/cards';
 export let router = express.Router();
 
 router.get('/', async (req, res, next) => {
-  const isValid = isValidRequest(req);
-  if (!isValid) {
-    res.status(401);
-    res.send();
-    return;
-  }
+  // const isValid = isValidRequest(req);
+  // if (!isValid) {
+  //   res.status(401);
+  //   res.send();
+  //   return;
+  // }
   const keys = await CardsLogic.getInstance().getKeys();
   res.jsonp({ keys });
 });
 
 router.post('/', async (req, res, next) => {
-  const isValid = isValidRequest(req);
-  if (!isValid) {
-    res.status(401);
-    res.send();
-    return;
-  }
+  // const isValid = isValidRequest(req);
+  // if (!isValid) {
+  //   res.status(401);
+  //   res.send();
+  //   return;
+  // }
   const body = req.body;
   const cardId = body.cardId.toLowerCase();
   if (cardId) {
@@ -32,12 +32,12 @@ router.post('/', async (req, res, next) => {
 });
 
 router.delete('/', async (req, res, next) => {
-  const isValid = isValidRequest(req);
-  if (!isValid) {
-    res.status(401);
-    res.send();
-    return;
-  }
+  // const isValid = isValidRequest(req);
+  // if (!isValid) {
+  //   res.status(401);
+  //   res.send();
+  //   return;
+  // }
   const body = req.body;
   const cardId = body.cardId.toLowerCase();
   if (cardId) {
