@@ -37,8 +37,8 @@ router.post('/data', (req, res, next) => {
 });
 
 router.get('/buffer/history', (req, res, next) => {
-  const body = req.body;
-  const peripheralId = body.peripheralId.toLowerCase();
+  const query = req.query;
+  const peripheralId = query.peripheralId.toLowerCase();
   let history = [];
   if (peripheralId) {
     history = StaticGlobals.getInstance()
