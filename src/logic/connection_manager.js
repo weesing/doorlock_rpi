@@ -114,10 +114,10 @@ export class ConnectionManager {
 
       let characteristic = characteristics[0];
       if (!characteristic) {
-        this.disconnectPeripheral(peripheral);
         logger.error(
-          `Disconnecting from peripheral due to characteristic not found.`
+          `[${peripheral.id}] Disconnecting from peripheral due to characteristic not found.`
         );
+        this.disconnectPeripheral(peripheral);
         return;
       }
       logger.info(
