@@ -1,6 +1,8 @@
 import _ from 'lodash';
 import { PeripheralBuffer } from '../peripheral/peripheral_buffer';
 import logger from '../lib/logger';
+import IORedis from 'ioredis';
+import moment from 'moment';
 
 export class DataReceiver {
   constructor() {
@@ -9,6 +11,8 @@ export class DataReceiver {
 
     // initialize the buffers
     this.initBuffer(this.peripheralIds);
+
+    this.redisClient = new IORedis();
   }
 
   initPeripheralIds() {
@@ -44,6 +48,16 @@ export class DataReceiver {
       this.peripheralBuffer[peripheralId].appendBuffer(bufferData);
       const buffer = this.peripheralBuffer[peripheralId].buffer;
       const history = this.peripheralBuffer[peripheralId].dataStringHistory;
+      for (const log of history) {
+        if (log.sent) {
+          continue;
+        }
+        const dateString = moment().format(`YYYY-MM-DD hh:mm:ss`);
+        this.redisClient.sadd(
+          `log:${peripheralId}`,
+          `[${dateString}] ${log.dataString}`
+        );
+      }
     } else {
       logger.warn(`[${peripheralId}] Received data from unknown device.`);
     }
