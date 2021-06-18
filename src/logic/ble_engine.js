@@ -161,6 +161,7 @@ export class BLEEngine extends DataReceiver {
         `${linearServoSettings.angles.disengaged}`
       );
       this.sendCommand(this.lockMAC, `l_step`, `${linearServoSettings.step}`);
+      this.sendCommand(this.lockMAC, `l_ms`, `${linearServoSettings.ms}`);
       this.sendCommand(
         this.lockMAC,
         `a_rdct`,

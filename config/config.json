@@ -29,10 +29,11 @@
       },
       "linear_servo": {
         "angles": {
-          "engaged": 82,
-          "disengaged": 50
+          "engaged": 77,
+          "disengaged": 45
         },
-        "step": 4
+        "step": 4,
+        "ms": 10
       },
       "adxl": {
         "max_read_count": 5,
