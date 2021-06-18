@@ -14,5 +14,6 @@ export function isValidRequest(req, res, next) {
     return;
   }
 
-  next(req, res);
+console.log('authorized');
+  next();
 }
