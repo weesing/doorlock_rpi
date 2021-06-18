@@ -194,6 +194,10 @@ export class ConnectionManager {
         );
       }
       this.subscriptionTimeouts[peripheralId] = subscriptionTimeout;
+
+      if (this.onPeripheralConnectedFn) {
+        this.onPeripheralConnectedFn(peripheral.id);
+      }
     };
 
     // Init callback for peripheral disconnected
@@ -202,6 +206,10 @@ export class ConnectionManager {
       this.disconnectPeripheral(peripheral);
       // Fire and forget
       this.restartScanning();
+      
+      if (this.onPeripheralDisconnectedFn) {
+        this.onPeripheralDisconnectedFn(peripheral.id);
+      }
     };
 
     peripheral.once('connect', async function () {
@@ -330,9 +338,9 @@ export class ConnectionManager {
     this.onDataReceivedFn = dataReceiver.onDataReceived.bind(dataReceiver);
     this.onPeripheralSubscribedFn =
       dataReceiver.onPeripheralSubscribed.bind(dataReceiver);
-    this.onPeripheralDisconnected =
+    this.onPeripheralDisconnectedFn =
       dataReceiver.onPeripheralDisconnected.bind(dataReceiver);
-    this.onPeripheralConnected =
+    this.onPeripheralConnectedFn =
       dataReceiver.onPeripheralConnected.bind(dataReceiver);
 
     const onScanStart = () => {
