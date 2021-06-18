@@ -30,16 +30,16 @@ export class BLEEngine extends DataReceiver {
   }
 
   popPeripheralMessage(peripheralId) {
+    // get characteristic for sending.
+    const characteristic =
+      this.connectionManager.getPeripheralCharacteristics(peripheralId);
+    if (_.isNil(characteristic)) {
+      return;
+    }
     if (
       !_.isNil(this._outboxMessageMap[peripheralId]) &&
       this._outboxMessageMap[peripheralId].length > 0
     ) {
-      // get characteristic for sending.
-      const characteristic =
-        this.connectionManager.getPeripheralCharacteristics(peripheralId);
-      if (_.isNil(characteristic)) {
-        return;
-      }
       // send oldest message
       const pending = this._outboxMessageMap[peripheralId].shift();
       logger.info(`[${peripheralId}] Sending ${pending} to ${peripheralId}`);
@@ -49,6 +49,14 @@ export class BLEEngine extends DataReceiver {
         // Error. Put back the message.
         this._outboxMessageMap[peripheralId].unshift(pending);
         logger.error(`[${peripheralId}] Error writing into characteristics`);
+        logger.error(e);
+      }
+    } else if (this._outboxMessageMap[peripheralId].length === 0) {
+      // No pending messages, send heartbeat
+      try {
+        characteristic.write(Buffer.from('<hb>;'));
+      } catch (e) {
+        logger.error(`[${peripheralId}] Error sending heartbeat`);
         logger.error(e);
       }
     }
