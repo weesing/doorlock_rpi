@@ -88,6 +88,13 @@ export class ConnectionManager {
       }
 
       let characteristic = characteristics[0];
+      if (!characteristic) {
+        this.disconnectPeripheral(peripheral);
+        logger.error(
+          `Disconnecting from peripheral due to characteristic not found.`
+        );
+        return;
+      }
       logger.info(
         `[${peripheral.id}] Subscribing to characteristics ${characteristic.uuid}`
       );
