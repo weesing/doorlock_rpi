@@ -41,10 +41,11 @@ export class DataReceiver {
         if (log.sent) {
           continue;
         }
-        const dateString = moment().format(`YYYY-MM-DD hh:mm:ss`);
-        this.redisClient.sadd(
+        const date = moment();
+        this.redisClient.zadd(
           `log:${peripheralId}`,
-          `[${dateString}] ${log.dataString}`
+          date.valueOf(),
+          `[${date.toString()}] ${log.dataString}`
         );
         log.sent = true;
       }
