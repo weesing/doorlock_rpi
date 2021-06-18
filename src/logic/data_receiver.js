@@ -36,6 +36,7 @@ export class DataReceiver {
 
   logFlush() {
     for (const peripheralId of Object.keys(this.peripheralBuffer)) {
+      logger.info(`[${peripheralId}] Flushing logs for peripheral`);
       const history = this.peripheralBuffer[peripheralId].dataStringHistory;
       for (const log of history) {
         if (log.sent) {
