@@ -11,6 +11,9 @@
       "flush_interval": 100
     }
   },
+  "logging": {
+    "flush_interval_ms": 500
+  },
   "lock": {
     "timeout": 2000,
     "settings": {

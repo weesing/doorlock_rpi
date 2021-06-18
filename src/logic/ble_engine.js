@@ -29,7 +29,7 @@ export class BLEEngine extends DataReceiver {
     this.meMAC = secrets.nodeMAC.toLowerCase();
   }
 
-  sendOldestPeripheralMessage(peripheralId) {
+  popPeripheralMessage(peripheralId) {
     if (
       !_.isNil(this._outboxMessageMap[peripheralId]) &&
       this._outboxMessageMap[peripheralId].length > 0
@@ -60,7 +60,7 @@ export class BLEEngine extends DataReceiver {
       clearInterval(this._outboxIntervals[peripheralId]);
     }
     this._outboxIntervals[peripheralId] = setInterval(() => {
-      this.sendOldestPeripheralMessage(peripheralId);
+      this.popPeripheralMessage(peripheralId);
     }, _.get(config, `engine.outbox.flush_interval`, 500));
   }
 

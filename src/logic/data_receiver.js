@@ -53,7 +53,7 @@ export class DataReceiver {
     }
     this.logFlushTimeout = setTimeout(async () => {
       this.logFlush();
-    }, 1000);
+    }, _.get(config, `logging.flush_interval_ms`, 500));
   }
 
   initLogFlushInterval() {
