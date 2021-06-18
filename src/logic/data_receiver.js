@@ -42,7 +42,7 @@ export class DataReceiver {
           continue;
         }
         const dateString = moment().format(`YYYY-MM-DD hh:mm:ss`);
-        await this.redisClient.sadd(
+        this.redisClient.sadd(
           `log:${peripheralId}`,
           `[${dateString}] ${log.dataString}`
         );
