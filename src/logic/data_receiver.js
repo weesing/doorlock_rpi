@@ -13,6 +13,8 @@ export class DataReceiver {
     this.initBuffer(this.peripheralIds);
 
     this.redisClient = new IORedis();
+
+    this.initLogFlushInterval();
   }
 
   initPeripheralIds() {
@@ -32,6 +34,30 @@ export class DataReceiver {
     }
   }
 
+  logFlush() {
+    for (const peripheralId of Object.keys(this.peripheralBuffer)) {
+      const history = this.peripheralBuffer[peripheralId].dataStringHistory;
+      for (const log of history) {
+        if (log.sent) {
+          continue;
+        }
+        const dateString = moment().format(`YYYY-MM-DD hh:mm:ss`);
+        this.redisClient.sadd(
+          `log:${peripheralId}`,
+          `[${dateString}] ${log.dataString}`
+        );
+        log.sent = true;
+      }
+    }
+    this.logFlushTimeout = setTimeout(async () => {
+      this.logFlush();
+    }, 1000);
+  }
+
+  initLogFlushInterval() {
+    this.logFlush();
+  }
+
   clearBufferByPeripheral(peripheralId) {
     this.peripheralBuffer[peripheralId].clearBuffer();
   }
@@ -46,23 +72,6 @@ export class DataReceiver {
     const peripheralId = peripheral.id;
     if (this.peripheralBuffer[peripheralId]) {
       this.peripheralBuffer[peripheralId].appendBuffer(bufferData);
-      const buffer = this.peripheralBuffer[peripheralId].buffer;
-      const history = this.peripheralBuffer[peripheralId].dataStringHistory;
-      for(let i = 0; i < history.length; ++i) {
-        const log = history[i];
-        if (log.sent) {
-          continue;
-        }
-        const dateString = moment().format(`YYYY-MM-DD hh:mm:ss`);
-        const logString = log.dataString;
-        if (log.dataString.endsWith('\r\n')) {
-          this.redisClient.sadd(
-            `log:${peripheralId}`,
-            `[${dateString}] ${logString}`
-          );
-          this.peripheralBuffer[peripheralId].dataStringHistory[i].sent = true;
-        }
-      }
     } else {
       logger.warn(`[${peripheralId}] Received data from unknown device.`);
     }
