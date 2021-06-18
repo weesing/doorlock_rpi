@@ -1,4 +1,4 @@
-import { SecretsLoader } from "./secrets_loader";
+import { SecretsLoader } from './secrets_loader';
 
 export function isValidRequest(req) {
   const reqApiKey = req.headers[`api_key`];
