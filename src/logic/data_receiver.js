@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import { PeripheralBuffer } from '../peripheral/peripheral_buffer';
+import config from '../lib/config';
 import logger from '../lib/logger';
 import IORedis from 'ioredis';
 import moment from 'moment';
