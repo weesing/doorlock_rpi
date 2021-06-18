@@ -48,16 +48,20 @@ export class DataReceiver {
       this.peripheralBuffer[peripheralId].appendBuffer(bufferData);
       const buffer = this.peripheralBuffer[peripheralId].buffer;
       const history = this.peripheralBuffer[peripheralId].dataStringHistory;
-      for (const log of history) {
+      for(let i = 0; i < history.length; ++i) {
+        const log = history[i];
         if (log.sent) {
           continue;
         }
         const dateString = moment().format(`YYYY-MM-DD hh:mm:ss`);
-        this.redisClient.sadd(
-          `log:${peripheralId}`,
-          `[${dateString}] ${log.dataString}`
-        );
-        log.sent = true;
+        const logString = log.dataString;
+        if (log.dataString.endsWith('\r\n')) {
+          this.redisClient.sadd(
+            `log:${peripheralId}`,
+            `[${dateString}] ${logString}`
+          );
+          this.peripheralBuffer[peripheralId].dataStringHistory[i].sent = true;
+        }
       }
     } else {
       logger.warn(`[${peripheralId}] Received data from unknown device.`);
