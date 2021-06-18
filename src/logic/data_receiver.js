@@ -57,6 +57,7 @@ export class DataReceiver {
           `log:${peripheralId}`,
           `[${dateString}] ${log.dataString}`
         );
+        log.sent = true;
       }
     } else {
       logger.warn(`[${peripheralId}] Received data from unknown device.`);
