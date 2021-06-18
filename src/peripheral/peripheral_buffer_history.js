@@ -4,6 +4,10 @@ export class PeripheralBufferHistory {
     this._sent = sent;
   }
 
+  get sent() {
+    return this._sent;
+  }
+
   set sent(sent) {
     this._sent = sent;
   }
