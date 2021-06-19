@@ -51,7 +51,8 @@ export class BLEEngine extends DataReceiver {
         logger.error(`[${peripheralId}] Error writing into characteristics`);
         logger.error(e);
       }
-    } else {
+    }
+    /* else {
       // No pending messages, send heartbeat
       try {
         characteristic.write(Buffer.from('<hb>;'));
@@ -60,6 +61,7 @@ export class BLEEngine extends DataReceiver {
         logger.error(e);
       }
     }
+    */
   }
 
   initPeripheralInterval(peripheralId) {
@@ -99,11 +101,6 @@ export class BLEEngine extends DataReceiver {
     this._outboxMessageMap[peripheralId].push(
       `<${commandName}>${payload}${delimiter}`
     );
-    /*
-    this._outboxMessageMap[peripheralId].push(
-      `${payload}${_.get(config, `engine.outbox.delimiter`, `;`)}`
-    );
-    */
   }
 
   toggleLock() {
@@ -114,12 +111,6 @@ export class BLEEngine extends DataReceiver {
   sendData(peripheralId, payload) {
     this.sendCommand(peripheralId, `data`, payload);
   }
-
-  /*
-  sendSetting(peripheralId, settingStr) {
-    this.sendCommand(peripheralId, `setting`, settingStr);
-  }
-  */
 
   sendPeripheralSettings(peripheralId) {
     // Send lock MAC intialization settings
@@ -173,39 +164,6 @@ export class BLEEngine extends DataReceiver {
         `a_xlk`,
         `${adxlSettings.angles.unlocked}`
       );
-
-      /*
-      this.sendSetting(
-        this.lockMAC,
-        `m_unlk=${mainServoSettings.frequencies.unlock}`
-      );
-      this.sendSetting(
-        this.lockMAC,
-        `m_lk=${mainServoSettings.frequencies.lock}`
-      );
-      this.sendSetting(
-        this.lockMAC,
-        `m_idle=${mainServoSettings.frequencies.idle}`
-      );
-      this.sendSetting(
-        this.lockMAC,
-        `l_en=${linearServoSettings.angles.engaged}`
-      );
-      this.sendSetting(
-        this.lockMAC,
-        `l_disen=${linearServoSettings.angles.disengaged}`
-      );
-      this.sendSetting(this.lockMAC, `l_step=${linearServoSettings.step}`);
-      this.sendSetting(
-        this.lockMAC,
-        `adxl_rdcnt=${adxlSettings.max_read_count}`
-      );
-      this.sendSetting(this.lockMAC, `adxl_lk=${adxlSettings.angles.locked}`);
-      this.sendSetting(
-        this.lockMAC,
-        `adxl_unlk=${adxlSettings.angles.unlocked}`
-      );
-      */
     }
   }
 
