@@ -40,7 +40,7 @@ export class DataReceiver {
       const history = this.peripheralBuffer[peripheralId].dataStringHistory;
       for (let i = 0; i < history.length; ++i) {
         const log = history[i];
-        if (log.sent || !log.dataString.endsWith('\r\n')) {
+        if (log.logged || !log.dataString.endsWith('\r\n')) {
           continue;
         }
         const date = moment();
@@ -49,7 +49,7 @@ export class DataReceiver {
           date.valueOf(),
           `[${date.toString()}] ${log.dataString}`
         );
-        this.peripheralBuffer[peripheralId].dataStringHistory[i].sent = true;
+        this.peripheralBuffer[peripheralId].dataStringHistory[i].logged = true;
       }
     }
     this.logFlushTimeout = setTimeout(async () => {

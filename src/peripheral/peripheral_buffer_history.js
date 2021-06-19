@@ -1,15 +1,24 @@
 export class PeripheralBufferHistory {
-  constructor({ dataString = '', sent = false } = {}) {
+  constructor({ dataString = '', logged = false } = {}) {
     this._dataString = dataString;
-    this._sent = sent;
+    this._logged = logged;
+    this._processed = false;
   }
 
-  get sent() {
-    return this._sent;
+  get logged() {
+    return this._logged;
   }
 
-  set sent(sent) {
-    this._sent = sent;
+  set logged(logged) {
+    this._logged = logged;
+  }
+
+  get processed() {
+    return this._processed;
+  }
+
+  set processed(processed) {
+    this._processed = processed;
   }
 
   get dataString() {
