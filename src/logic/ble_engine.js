@@ -177,6 +177,7 @@ export class BLEEngine extends DataReceiver {
       return;
     }
     if (this._initialPeripheralSyncTimeout[peripheralId]) {
+      logger.info(`[${peripheralId}] Clearing previous initial sync timeout.`);
       clearTimeout(this._initialPeripheralSyncTimeout[peripheralId]);
     }
     this._initialPeripheralSyncTimeout[peripheralId] = setTimeout(() => {
@@ -188,7 +189,9 @@ export class BLEEngine extends DataReceiver {
     super.onPeripheralDisconnected(peripheralId);
 
     if (this._initialPeripheralSyncTimeout[peripheralId]) {
-      logger.info(`[${peripheralId}] Clearing existing initial sync timeout...`);
+      logger.info(
+        `[${peripheralId}] Clearing existing initial sync timeout...`
+      );
       clearTimeout(this._initialPeripheralSyncTimeout[peripheralId]);
     }
   }
