@@ -53,56 +53,20 @@ export class BLEEngine extends DataReceiver {
       const linearServoSettings = _.get(config, `lock.settings.linear_servo`);
       const adxlSettings = _.get(config, `lock.settings.adxl`);
 
-      this._outbox.sendMessage(
-        this.lockMAC,
-        `m_xlk`,
-        `${mainServoSettings.frequencies.unlock}`
-      );
-      this._outbox.sendMessage(
-        this.lockMAC,
-        `m_lk`,
-        `${mainServoSettings.frequencies.lock}`
-      );
-      this._outbox.sendMessage(
-        this.lockMAC,
-        `m_idl`,
-        `${mainServoSettings.frequencies.idle}`
-      );
-      this._outbox.sendMessage(
-        this.lockMAC,
-        `l_en`,
-        `${linearServoSettings.angles.engaged}`
-      );
-      this._outbox.sendMessage(
-        this.lockMAC,
-        `l_xen`,
-        `${linearServoSettings.angles.disengaged}`
-      );
-      this._outbox.sendMessage(
-        this.lockMAC,
-        `l_step`,
-        `${linearServoSettings.step}`
-      );
-      this._outbox.sendMessage(
-        this.lockMAC,
-        `l_ms`,
-        `${linearServoSettings.ms}`
-      );
-      this._outbox.sendMessage(
-        this.lockMAC,
-        `a_rdct`,
-        `${adxlSettings.max_read_count}`
-      );
-      this._outbox.sendMessage(
-        this.lockMAC,
-        `a_lk`,
-        `${adxlSettings.angles.locked}`
-      );
-      this._outbox.sendMessage(
-        this.lockMAC,
-        `a_xlk`,
-        `${adxlSettings.angles.unlocked}`
-      );
+      for (const setting of [
+        { tag: 'm_xlk', value: mainServoSettings.frequencies.unlock },
+        { tag: 'm_lk', value: mainServoSettings.frequencies.lock },
+        { tag: 'm_idl', value: mainServoSettings.frequencies.idle },
+        { tag: 'l_en', value: linearServoSettings.angles.engaged },
+        { tag: 'l_xen', value: linearServoSettings.angles.disengaged },
+        { tag: 'l_step', value: linearServoSettings.step },
+        { tag: 'l_ms', value: linearServoSettings.ms },
+        { tag: `a_rdct`, value: adxlSettings.max_read_count },
+        { tag: `a_lk`, value: adxlSettings.angles.locked },
+        { tag: `a_xlk`, value: adxlSettings.angles.unlocked }
+      ]) {
+        this.outbox.sendMessage(this.lockMAC, setting.tag, `${setting.value}`);
+      }
     }
   }
 
