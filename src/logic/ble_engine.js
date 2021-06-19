@@ -65,7 +65,7 @@ export class BLEEngine extends DataReceiver {
         { tag: `a_lk`, value: adxlSettings.angles.locked },
         { tag: `a_xlk`, value: adxlSettings.angles.unlocked }
       ]) {
-        this.outbox.sendMessage(this.lockMAC, setting.tag, `${setting.value}`);
+        this._outbox.sendMessage(this.lockMAC, setting.tag, `${setting.value}`);
       }
     }
   }
