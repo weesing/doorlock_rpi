@@ -5,6 +5,7 @@ import { SecretsLoader } from '../lib/secrets_loader';
 import { CardsLogic } from './cards';
 import { ConnectionManager } from './connection_manager';
 import { DataReceiver } from './data_receiver';
+import { Outbox } from './outbox';
 
 export class BLEEngine extends DataReceiver {
   constructor() {
@@ -12,10 +13,12 @@ export class BLEEngine extends DataReceiver {
 
     this._connectionManager = null;
 
-    this.initPeripheralIntervals();
-    this.initInitialPeripheralSyncTimeout();
+    this._outbox = new Outbox(this.peripheralIds);
+
+    this._initialPeripheralSyncTimeout = {};
   }
 
+  // Overwrite
   initPeripheralIds() {
     super.initPeripheralIds();
 
@@ -30,139 +33,74 @@ export class BLEEngine extends DataReceiver {
     this.meMAC = secrets.nodeMAC.toLowerCase();
   }
 
-  popPeripheralMessage(peripheralId) {
-    // get characteristic for sending.
-    const characteristic =
-      this.connectionManager.getPeripheralCharacteristic(peripheralId);
-    if (_.isNil(characteristic)) {
-      return;
-    }
-    if (
-      !_.isNil(this._outboxMessageMap[peripheralId]) &&
-      this._outboxMessageMap[peripheralId].length > 0
-    ) {
-      // send oldest message
-      const pending = this._outboxMessageMap[peripheralId].shift();
-      logger.info(`[${peripheralId}] Sending ${pending} to ${peripheralId}`);
-      try {
-        characteristic.write(Buffer.from(pending));
-      } catch (e) {
-        // Error. Put back the message.
-        this._outboxMessageMap[peripheralId].unshift(pending);
-        logger.error(
-          `[${peripheralId}] Error sending oldest message to peripheral`
-        );
-        logger.error(e);
-      }
-    }
-    /* else {
-      // No pending messages, send heartbeat
-      try {
-        characteristic.write(Buffer.from('<hb>;'));
-      } catch (e) {
-        logger.error(`[${peripheralId}] Error sending heartbeat`);
-        logger.error(e);
-      }
-    }
-    */
-  }
-
-  initPeripheralInterval(peripheralId) {
-    if (!_.isNil(this._outboxIntervals[peripheralId])) {
-      logger.info(`[${peripheralId}] Clearing existing outbox interval...`);
-      clearInterval(this._outboxIntervals[peripheralId]);
-    }
-    this._outboxIntervals[peripheralId] = setInterval(() => {
-      this.popPeripheralMessage(peripheralId);
-    }, _.get(config, `engine.outbox.flush_interval`, 500));
-  }
-
-  initPeripheralIntervals() {
-    this._outboxMessageMap = {};
-    this._outboxIntervals = {};
-    for (const peripheralId of this.peripheralIds) {
-      logger.info(
-        `Intializing outbox intervals for peripheral ${peripheralId}`
-      );
-      this.initPeripheralInterval(peripheralId);
-    }
-  }
-
-  initInitialPeripheralSyncTimeout() {
-    this._initialPeripheralSyncTimeout = {};
-  }
-
   get connectionManager() {
     return this._connectionManager;
   }
 
-  sendCommand(peripheralId, commandName, payload) {
-    if (!this._outboxMessageMap[peripheralId]) {
-      this._outboxMessageMap[peripheralId] = [];
-    }
-    const delimiter = _.get(config, `engine.outbox.delimiter`, `;`);
-    this._outboxMessageMap[peripheralId].push(
-      `<${commandName}>${payload}${delimiter}`
-    );
-  }
-
   toggleLock() {
     const lockSecret = SecretsLoader.loadSecrets()['lockSecret'];
-    this.sendCommand(this.lockMAC, `lock`, lockSecret);
+    this._outbox.sendMessage(this.lockMAC, `lock`, lockSecret);
   }
 
   sendData(peripheralId, payload) {
-    this.sendCommand(peripheralId, `data`, payload);
+    this._outbox.sendMessage(peripheralId, `data`, payload);
   }
 
   sendPeripheralSettings(peripheralId) {
     // Send lock MAC intialization settings
     if (peripheralId === this.lockMAC) {
-      if (_.isNil(this._outboxMessageMap[this.lockMAC])) {
-        // Clear all the outbox messages
-        this._outboxMessageMap[this.lockMAC] = [];
-      }
-
       // Send all the settings.
       logger.info(`Sending settings....`);
       const mainServoSettings = _.get(config, `lock.settings.main_servo`);
       const linearServoSettings = _.get(config, `lock.settings.linear_servo`);
       const adxlSettings = _.get(config, `lock.settings.adxl`);
 
-      this.sendCommand(
+      this._outbox.sendMessage(
         this.lockMAC,
         `m_xlk`,
         `${mainServoSettings.frequencies.unlock}`
       );
-      this.sendCommand(
+      this._outbox.sendMessage(
         this.lockMAC,
         `m_lk`,
         `${mainServoSettings.frequencies.lock}`
       );
-      this.sendCommand(
+      this._outbox.sendMessage(
         this.lockMAC,
         `m_idl`,
         `${mainServoSettings.frequencies.idle}`
       );
-      this.sendCommand(
+      this._outbox.sendMessage(
         this.lockMAC,
         `l_en`,
         `${linearServoSettings.angles.engaged}`
       );
-      this.sendCommand(
+      this._outbox.sendMessage(
         this.lockMAC,
         `l_xen`,
         `${linearServoSettings.angles.disengaged}`
       );
-      this.sendCommand(this.lockMAC, `l_step`, `${linearServoSettings.step}`);
-      this.sendCommand(this.lockMAC, `l_ms`, `${linearServoSettings.ms}`);
-      this.sendCommand(
+      this._outbox.sendMessage(
+        this.lockMAC,
+        `l_step`,
+        `${linearServoSettings.step}`
+      );
+      this._outbox.sendMessage(
+        this.lockMAC,
+        `l_ms`,
+        `${linearServoSettings.ms}`
+      );
+      this._outbox.sendMessage(
         this.lockMAC,
         `a_rdct`,
         `${adxlSettings.max_read_count}`
       );
-      this.sendCommand(this.lockMAC, `a_lk`, `${adxlSettings.angles.locked}`);
-      this.sendCommand(
+      this._outbox.sendMessage(
+        this.lockMAC,
+        `a_lk`,
+        `${adxlSettings.angles.locked}`
+      );
+      this._outbox.sendMessage(
         this.lockMAC,
         `a_xlk`,
         `${adxlSettings.angles.unlocked}`
