@@ -188,11 +188,8 @@ export class BLEEngine extends DataReceiver {
     super.onPeripheralDisconnected(peripheralId);
 
     if (this._initialPeripheralSyncTimeout[peripheralId]) {
+      logger.info(`[${peripheralId}] Clearing existing initial sync timeout...`);
       clearTimeout(this._initialPeripheralSyncTimeout[peripheralId]);
-    }
-    if (!_.isNil(this._outboxIntervals[peripheralId])) {
-      logger.info(`[${peripheralId}] Clearing existing outbox interval...`);
-      clearInterval(this._outboxIntervals[peripheralId]);
     }
   }
 
