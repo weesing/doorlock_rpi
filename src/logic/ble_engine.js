@@ -48,7 +48,9 @@ export class BLEEngine extends DataReceiver {
       } catch (e) {
         // Error. Put back the message.
         this._outboxMessageMap[peripheralId].unshift(pending);
-        logger.error(`[${peripheralId}] Error sending oldest message to peripheral`);
+        logger.error(
+          `[${peripheralId}] Error sending oldest message to peripheral`
+        );
         logger.error(e);
       }
     }
@@ -224,6 +226,14 @@ export class BLEEngine extends DataReceiver {
         logger.warn(`Unauthorized!`);
       }
       // lockCharacteristic.write(data);
+    } else if (peripheralId === this.lockMAC) {
+      const dataString = bufferData.toString();
+      if (dataString.startsWith('<req_data>') && dataString.endsWith('\r\n')) {
+        logger.info(
+          `[${peripheralId}] Lock is requesting initial settings data, sending now.`
+        );
+        this.sendPeripheralSettings(this.lockMAC);
+      }
     }
   }
 
