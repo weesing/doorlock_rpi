@@ -1,7 +1,8 @@
 import pino from 'pino';
+import config from './config';
 
 const logger = pino({
-  level: 'trace',
+  level: config['log_level'],
   prettyPrint: true
 });
 

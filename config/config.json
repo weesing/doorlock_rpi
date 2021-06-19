@@ -1,4 +1,5 @@
 {
+  "log_level": "trace",
   "connection_manager": {
     "discover": {
       "service_uuid": "ffe0",
