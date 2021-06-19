@@ -2,6 +2,7 @@ import _ from 'lodash';
 import config from '../lib/config';
 import logger from '../lib/logger';
 import { SecretsLoader } from '../lib/secrets_loader';
+import { CardsLogic } from './cards';
 import { ConnectionManager } from './connection_manager';
 import { DataReceiver } from './data_receiver';
 
@@ -217,15 +218,21 @@ export class BLEEngine extends DataReceiver {
         return;
       }
 
-      // TODO: Examine the data sent and forward to lock
-      const testKey = Buffer.from('ffFFffFF', 'hex');
-      if (Buffer.compare(bufferData, testKey) === 0) {
-        logger.info(`Authorized! Sending data.`);
-        this.toggleLock();
-      } else {
-        logger.warn(`Unauthorized!`);
+      const testKey = bufferData.toString('hex');
+      const verifiedKeys = CardsLogic.getInstance().getKeys();
+      let verified = false;
+      console.log(testKey);
+      console.log(verifiedKeys);
+      for(const key of verifiedKeys) {
+        if (testKey === key) {
+          verified = true;
+          break;
+        }
       }
-      // lockCharacteristic.write(data);
+      logger.info(`${verified ? 'Authorized! Sending lock toggle' : 'Unauthorized'}`);
+      if (verified) {
+        this.toggleLock();
+      }
     } else if (peripheralId === this.lockMAC) {
       const dataStringHistory =
         this.peripheralBuffer[this.lockMAC].dataStringHistory;
