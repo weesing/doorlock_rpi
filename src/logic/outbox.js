@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import logger from '../lib/logger';
 
 export class Outbox {
