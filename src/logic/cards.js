@@ -26,7 +26,7 @@ export class CardsLogic {
 
   async doesKeyExists(findKey) {
     const keys = await this.getKeys();
-    for(const key of keys) {
+    for (const key of keys) {
       if (key === findKey) {
         return true;
       }

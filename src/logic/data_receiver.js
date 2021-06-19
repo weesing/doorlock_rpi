@@ -48,7 +48,10 @@ export class DataReceiver {
           date: date.toString(),
           id: log.id,
           message: log.dataString
-        }
+        };
+        logger.trace(
+          `[${peripheralId}] Logging message ${JSON.stringify(logMessage)}`
+        );
         this.redisClient.zadd(
           `log:${peripheralId}`,
           date.valueOf(),

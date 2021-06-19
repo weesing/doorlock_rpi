@@ -74,7 +74,8 @@ export class PeripheralBuffer {
       } else {
         // last history not ended, create new history with appended data string
         lastHistoryDataString = `${lastHistoryDataString}${currReceivedStringToken}`;
-        this.dataStringHistory[this.dataStringHistory.length - 1].dataString = lastHistoryDataString;
+        this.dataStringHistory[this.dataStringHistory.length - 1].dataString =
+          lastHistoryDataString;
       }
     }
 
