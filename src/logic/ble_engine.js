@@ -232,10 +232,7 @@ export class BLEEngine extends DataReceiver {
       for (let i = 0; i < dataStringHistory.length - 1; ++i) {
         const dataString = dataStringHistory[i].dataString;
         if (!dataStringHistory[i].processed) {
-          if (
-            dataString.startsWith('<req_data>') &&
-            dataString.endsWith('\r\n')
-          ) {
+          if (dataString === '<req_data>\r\n') {
             logger.info(
               `[${peripheralId}] Lock is requesting initial settings data, sending now.`
             );
