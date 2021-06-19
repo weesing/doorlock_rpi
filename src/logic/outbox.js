@@ -1,6 +1,13 @@
 export class Outbox {
-  constructor() {
-    this.initPeripheralIntervals();
+  constructor(peripheralIds) {
+    this._outboxMessageMap = {};
+    this._outboxIntervals = {};
+    for (const peripheralId of peripheralIds) {
+      logger.info(
+        `Intializing outbox intervals for peripheral ${peripheralId}`
+      );
+      this.createInterval(peripheralId);
+    }
   }
 
   get outboxMessageMap() {
@@ -9,6 +16,16 @@ export class Outbox {
 
   get outboxIntervals() {
     return this._outboxIntervals;
+  }
+
+  createInterval(peripheralId) {
+    if (!_.isNil(this._outboxIntervals[peripheralId])) {
+      logger.info(`[${peripheralId}] Clearing existing outbox interval...`);
+      clearInterval(this._outboxIntervals[peripheralId]);
+    }
+    this._outboxIntervals[peripheralId] = setInterval(() => {
+      this.popPeripheralMessage(peripheralId);
+    }, _.get(config, `engine.outbox.flush_interval`, 500));
   }
 
   sendMessage(peripheralId, tag, payload) {
@@ -45,27 +62,6 @@ export class Outbox {
         );
         logger.error(e);
       }
-    }
-  }
-
-  createInterval(peripheralId) {
-    if (!_.isNil(this._outboxIntervals[peripheralId])) {
-      logger.info(`[${peripheralId}] Clearing existing outbox interval...`);
-      clearInterval(this._outboxIntervals[peripheralId]);
-    }
-    this._outboxIntervals[peripheralId] = setInterval(() => {
-      this.popPeripheralMessage(peripheralId);
-    }, _.get(config, `engine.outbox.flush_interval`, 500));
-  }
-
-  initPeripheralIntervals() {
-    this._outboxMessageMap = {};
-    this._outboxIntervals = {};
-    for (const peripheralId of this.peripheralIds) {
-      logger.info(
-        `Intializing outbox intervals for peripheral ${peripheralId}`
-      );
-      this.createInterval(peripheralId);
     }
   }
 }
