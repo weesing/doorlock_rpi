@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import logger from '../lib/logger';
+import config from '../lib/config';
 
 export class Outbox {
   constructor(peripheralIds, connectionManager) {
