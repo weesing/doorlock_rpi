@@ -227,12 +227,24 @@ export class BLEEngine extends DataReceiver {
       }
       // lockCharacteristic.write(data);
     } else if (peripheralId === this.lockMAC) {
-      const dataString = bufferData.toString();
-      if (dataString.startsWith('<req_data>') && dataString.endsWith('\r\n')) {
-        logger.info(
-          `[${peripheralId}] Lock is requesting initial settings data, sending now.`
-        );
-        this.sendPeripheralSettings(this.lockMAC);
+      const dataStringHistory =
+        this.peripheralBuffer[this.lockMAC].dataStringHistory;
+      for (let i = 0; i < dataStringHistory.length - 1; ++i) {
+        const dataString = dataStringHistory[i].dataString;
+        if (!dataStringHistory[i].processed) {
+          if (
+            dataString.startsWith('<req_data>') &&
+            dataString.endsWith('\r\n')
+          ) {
+            logger.info(
+              `[${peripheralId}] Lock is requesting initial settings data, sending now.`
+            );
+            this.sendPeripheralSettings(this.lockMAC);
+          }
+          this.peripheralBuffer[this.lockMAC].dataStringHistory[
+            i
+          ].processed = true;
+        }
       }
     }
   }
