@@ -223,13 +223,15 @@ export class BLEEngine extends DataReceiver {
       let verified = false;
       console.log(testKey);
       console.log(verifiedKeys);
-      for(const key of verifiedKeys) {
+      for (const key of verifiedKeys) {
         if (testKey === key) {
           verified = true;
           break;
         }
       }
-      logger.info(`${verified ? 'Authorized! Sending lock toggle' : 'Unauthorized'}`);
+      logger.info(
+        `${verified ? 'Authorized! Sending lock toggle' : 'Unauthorized'}`
+      );
       if (verified) {
         this.toggleLock();
       }
