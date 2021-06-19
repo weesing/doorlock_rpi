@@ -1,7 +1,12 @@
+import logger from '../lib/logger';
+
 export class Outbox {
-  constructor(peripheralIds) {
+  constructor(peripheralIds, connectionManager) {
     this._outboxMessageMap = {};
     this._outboxIntervals = {};
+
+    this._connectionManager = connectionManager;
+
     for (const peripheralId of peripheralIds) {
       logger.info(
         `Intializing outbox intervals for peripheral ${peripheralId}`
@@ -41,7 +46,7 @@ export class Outbox {
   popPeripheralMessage(peripheralId) {
     // get characteristic for sending.
     const characteristic =
-      this.connectionManager.getPeripheralCharacteristic(peripheralId);
+      this._connectionManager.getPeripheralCharacteristic(peripheralId);
     if (_.isNil(characteristic)) {
       return;
     }

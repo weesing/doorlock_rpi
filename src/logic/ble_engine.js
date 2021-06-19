@@ -13,8 +13,6 @@ export class BLEEngine extends DataReceiver {
 
     this._connectionManager = null;
 
-    this._outbox = new Outbox(this.peripheralIds);
-
     this._initialPeripheralSyncTimeout = {};
   }
 
@@ -199,6 +197,8 @@ export class BLEEngine extends DataReceiver {
     const dataReceiver = this;
     this._connectionManager = new ConnectionManager(this.peripheralIds);
     this._connectionManager.startConnections(dataReceiver);
+
+    this._outbox = new Outbox(this.peripheralIds, this._connectionManager);
   }
 
   static getInstance() {
