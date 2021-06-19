@@ -121,8 +121,6 @@ export class BLEEngine extends DataReceiver {
       const testKey = bufferData.toString('hex');
       const verifiedKeys = await CardsLogic.getInstance().getKeys();
       let verified = false;
-      console.log(testKey);
-      console.log(verifiedKeys);
       for (const key of verifiedKeys) {
         if (testKey === key) {
           verified = true;
