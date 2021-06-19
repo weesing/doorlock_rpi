@@ -65,22 +65,17 @@ export class PeripheralBuffer {
     */
     let lastHistory;
     if (this.dataStringHistory.length > 0) {
-      lastHistory = this.dataStringHistory.splice(
-        this.dataStringHistory.length - 1,
-        1
-      )[0];
-    }
-    let currReceivedStringToken = receivedStringTokens.shift();
-    let lastHistoryDataString = lastHistory ? lastHistory.dataString : '';
-    if (lastHistoryDataString.endsWith(DETECT_DELIMITER)) {
-      // last history already ended, push it back.
-      this.addHistory(lastHistoryDataString);
-      // push new history data onto history
-      this.addHistory(currReceivedStringToken);
-    } else {
-      // last history not ended, create new history with appended data string
-      lastHistoryDataString = `${lastHistoryDataString}${currReceivedStringToken}`;
-      this.addHistory(lastHistoryDataString);
+      lastHistory = this.dataStringHistory[this.dataStringHistory.length - 1];
+      let currReceivedStringToken = receivedStringTokens.shift();
+      let lastHistoryDataString = lastHistory ? lastHistory.dataString : '';
+      if (lastHistoryDataString.endsWith(DETECT_DELIMITER)) {
+        // push new history data onto history
+        this.addHistory(currReceivedStringToken);
+      } else {
+        // last history not ended, create new history with appended data string
+        lastHistoryDataString = `${lastHistoryDataString}${currReceivedStringToken}`;
+        this.dataStringHistory[this.dataStringHistory.length - 1].dataString = lastHistoryDataString;
+      }
     }
 
     // push the rest of the tokens onto history

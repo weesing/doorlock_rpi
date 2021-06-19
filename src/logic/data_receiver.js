@@ -44,10 +44,15 @@ export class DataReceiver {
           continue;
         }
         const date = moment();
+        const logMessage = {
+          date: date.toString(),
+          id: log.id,
+          message: log.dataString
+        }
         this.redisClient.zadd(
           `log:${peripheralId}`,
           date.valueOf(),
-          `[${date.toString()}] ${log.dataString}`
+          JSON.stringify(logMessage)
         );
         this.peripheralBuffer[peripheralId].dataStringHistory[i].logged = true;
       }

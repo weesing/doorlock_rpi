@@ -1,8 +1,15 @@
+import { v4 as uuidv4 } from 'uuid';
+
 export class PeripheralBufferHistory {
   constructor({ dataString = '', logged = false } = {}) {
+    this._id = uuidv4();
     this._dataString = dataString;
     this._logged = logged;
     this._processed = false;
+  }
+
+  get id() {
+    return this._id;
   }
 
   get logged() {
@@ -23,5 +30,9 @@ export class PeripheralBufferHistory {
 
   get dataString() {
     return this._dataString;
+  }
+
+  set dataString(dataString) {
+    this._dataString = dataString;
   }
 }
