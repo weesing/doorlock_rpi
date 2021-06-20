@@ -37,7 +37,7 @@
         "ms": 10
       },
       "adxl": {
-        "max_read_count": 5,
+        "max_read_count": 50,
         "angles": {
           "locked": 580,
           "unlocked": 436
