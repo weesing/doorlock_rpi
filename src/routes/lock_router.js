@@ -13,6 +13,5 @@ router.get('/setting', async (req, res, next) => {
   const result = await StaticGlobals.getInstance()
     .getVar('ble_engine')
     .getLockSetting(req.query.tag);
-console.log(`RESULT --- ${result}`);
   res.jsonp({value: result});
 });
