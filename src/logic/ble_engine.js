@@ -79,6 +79,49 @@ export class BLEEngine extends DataReceiver {
     });
   }
 
+  async getAllLockSettings() {
+    const promises = [];
+    for (const tag of [
+      'm_xlk',
+      'm_lk',
+      'm_idl',
+      'l_en',
+      'l_xen',
+      'l_step',
+      'l_ms',
+      'a_rdct',
+      'a_lk',
+      'a_xlk'
+    ]) {
+      promises.push(
+        new Promise((resolve) => {
+          // Promise is resolved elsewhere. See onDataReceived.
+          this.commandPromiseResolves[tag] = resolve;
+        }).then((result) => {
+          logger.info(`Retrieved result ${tag} - ${result}`);
+          return result;
+        })
+      );
+      // Send the requests
+      this._outbox.sendMessage(this.lockMAC, `get_${tag}`, ``);
+    }
+
+    return Promise.all(promises).then((values) => {
+      return {
+        'mainServoUnlockFrequency': values[0],
+        'mainServoLockFrequency': values[1],
+        'mainServoIdleFrequency': values[2],
+        'linearServoEngagedAngle': values[3],
+        'linearServoDisengagedAngle': values[4],
+        'linearServoStep': values[5],
+        'linearServoMs': values[6],
+        'adxlReadSampleCount': values[7],
+        'adxlLockAngle': values[8],
+        'adxlUnlockAngle': values[9]
+      }
+    });
+  }
+
   clearInitialSyncTimeout(peripheralId) {
     if (this._initialPeripheralSyncTimeout[peripheralId]) {
       logger.info(
@@ -161,7 +204,9 @@ export class BLEEngine extends DataReceiver {
             let keyValueToken = tempDataString
               .replace('<', '') // remove first < character
               .split('>');
-            logger.info(`[${peripheralId}] Received command/data ${keyValueToken}`);
+            logger.info(
+              `[${peripheralId}] Received command/data ${keyValueToken}`
+            );
             if (keyValueToken.length < 1) {
               continue;
             }
