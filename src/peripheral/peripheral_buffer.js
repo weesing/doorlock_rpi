@@ -42,6 +42,11 @@ export class PeripheralBuffer {
       .filter((token) => token !== '')
       .map((token) => `${token}${DETECT_DELIMITER}`); // put back the delimiters
 
+    // if the received data starts with delimiter, put back the starting delimiter as first token.
+    if (receivedString.startsWith(DETECT_DELIMITER)) {
+      receivedStringTokens.unshift(DETECT_DELIMITER);
+    }
+
     /*
      STEP 2: 
      Check whether the received string ends with delimiter. 
