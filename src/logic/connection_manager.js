@@ -360,7 +360,7 @@ export class ConnectionManager {
 
     const onScanStart = () => {
       this.isScanning = true;
-      logger.debug(`Scanning started`);
+      logger.info(`Scanning started`);
     };
     const onScanStop = () => {
       this.isScanning = false;
