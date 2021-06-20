@@ -158,13 +158,13 @@ export class BLEEngine extends DataReceiver {
               if (!dataString.endsWith('\r\n')) {
                 break;
               }
-              dataString = dataString.replace('\r\n');
+              let tempDataString = dataString.replace('\r\n');
               const dataRegex = /^<[0-9a-zA-Z_]+>[0-9]+/g;
-              if (dataString.match(dataRegex).length === 0) {
+              if (tempDataString.match(dataRegex).length === 0) {
                 break;
               }
               // e.g. <m_xlk>1800\r\n
-              let keyValueToken = dataString
+              let keyValueToken = tempDataString
                 .replace('<', '') // remove first < character
                 .split('>');
               logger.info(`[${peripheralId}] Received data ${keyValueToken}`);
