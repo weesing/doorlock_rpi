@@ -25,6 +25,6 @@ router.post('/settings', (req, res, next) => {
       .sendPeripheralSettings(peripheralId);
   }
   res.jsonp({
-    message: 'Initialization triggered'
+    message: 'Lock settings sent'
   });
 });
