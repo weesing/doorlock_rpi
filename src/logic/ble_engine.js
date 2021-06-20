@@ -49,7 +49,7 @@ export class BLEEngine extends DataReceiver {
     // Send lock MAC intialization settings
     if (peripheralId === this.lockMAC) {
       // Send all the settings.
-      logger.info(`Sending settings....`);
+      logger.info(`[${this.lockMAC}] Sending settings....`);
       const mainServoSettings = _.get(config, `lock.settings.main_servo`);
       const linearServoSettings = _.get(config, `lock.settings.linear_servo`);
       const adxlSettings = _.get(config, `lock.settings.adxl`);
