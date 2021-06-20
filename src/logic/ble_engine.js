@@ -69,7 +69,7 @@ export class BLEEngine extends DataReceiver {
   }
 
   async getLockSetting(settingTag) {
-    this._outbox.sendMessage(this.lockMAC, `get${settingTag}`, `;`);
+    this._outbox.sendMessage(this.lockMAC, `get_${settingTag}`, `;`);
     return await new Promise((resolve) => {
       this.settingPromiseResolves[settingTag] = resolve;
     }).then((result) => {
