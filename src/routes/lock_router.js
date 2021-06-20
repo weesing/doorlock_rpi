@@ -10,10 +10,10 @@ router.post('/', async (req, res, next) => {
 });
 
 router.get('/settings', async (req, res, next) => {
-  const result = await StaticGlobals.getInstance()
+  const settings = await StaticGlobals.getInstance()
     .getVar('ble_engine')
     .getAllLockSettings();
-  res.jsonp({ result });
+  res.jsonp({ result: settings });
 });
 
 router.post('/settings', (req, res, next) => {
