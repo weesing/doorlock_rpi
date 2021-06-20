@@ -8,3 +8,10 @@ router.post('/', async (req, res, next) => {
   res.status(202);
   res.send();
 });
+
+router.get('/setting', async (req, res, next) => {
+  const result = await StaticGlobals.getInstance()
+    .getVar('ble_engine')
+    .getLockSetting(req.query.tag);
+  res.jsonp(result);
+});

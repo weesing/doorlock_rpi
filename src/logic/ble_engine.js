@@ -44,30 +44,37 @@ export class BLEEngine extends DataReceiver {
     this._outbox.sendMessage(peripheralId, `data`, payload);
   }
 
-  sendPeripheralSettings(peripheralId) {
+  sendPeripheralSettings() {
     // Send lock MAC intialization settings
-    if (peripheralId === this.lockMAC) {
-      // Send all the settings.
-      logger.info(`Sending settings....`);
-      const mainServoSettings = _.get(config, `lock.settings.main_servo`);
-      const linearServoSettings = _.get(config, `lock.settings.linear_servo`);
-      const adxlSettings = _.get(config, `lock.settings.adxl`);
+    // Send all the settings.
+    logger.info(`Sending settings....`);
+    const mainServoSettings = _.get(config, `lock.settings.main_servo`);
+    const linearServoSettings = _.get(config, `lock.settings.linear_servo`);
+    const adxlSettings = _.get(config, `lock.settings.adxl`);
 
-      for (const setting of [
-        { tag: 'm_xlk', value: mainServoSettings.frequencies.unlock },
-        { tag: 'm_lk', value: mainServoSettings.frequencies.lock },
-        { tag: 'm_idl', value: mainServoSettings.frequencies.idle },
-        { tag: 'l_en', value: linearServoSettings.angles.engaged },
-        { tag: 'l_xen', value: linearServoSettings.angles.disengaged },
-        { tag: 'l_step', value: linearServoSettings.step },
-        { tag: 'l_ms', value: linearServoSettings.ms },
-        { tag: `a_rdct`, value: adxlSettings.max_read_count },
-        { tag: `a_lk`, value: adxlSettings.angles.locked },
-        { tag: `a_xlk`, value: adxlSettings.angles.unlocked }
-      ]) {
-        this._outbox.sendMessage(this.lockMAC, setting.tag, `${setting.value}`);
-      }
+    for (const setting of [
+      { tag: 'm_xlk', value: mainServoSettings.frequencies.unlock },
+      { tag: 'm_lk', value: mainServoSettings.frequencies.lock },
+      { tag: 'm_idl', value: mainServoSettings.frequencies.idle },
+      { tag: 'l_en', value: linearServoSettings.angles.engaged },
+      { tag: 'l_xen', value: linearServoSettings.angles.disengaged },
+      { tag: 'l_step', value: linearServoSettings.step },
+      { tag: 'l_ms', value: linearServoSettings.ms },
+      { tag: `a_rdct`, value: adxlSettings.max_read_count },
+      { tag: `a_lk`, value: adxlSettings.angles.locked },
+      { tag: `a_xlk`, value: adxlSettings.angles.unlocked }
+    ]) {
+      this._outbox.sendMessage(this.lockMAC, setting.tag, `${setting.value}`);
     }
+  }
+
+  async getLockSetting(settingTag) {
+    this._outbox.sendMessage(this.lockMAC, `get${settingTag}`, `;`);
+    return await new Promise((resolve) => {
+      this.settingPromiseResolves[settingTag] = resolve;
+    }).then((result) => {
+      logger.info(`Retrieved result ${result}`);
+    });
   }
 
   clearInitialSyncTimeout(peripheralId) {
@@ -139,11 +146,40 @@ export class BLEEngine extends DataReceiver {
       for (let i = 0; i < dataStringHistory.length - 1; ++i) {
         const dataString = dataStringHistory[i].dataString;
         if (!dataStringHistory[i].processed) {
-          if (dataString === '<req_data>\r\n') {
-            logger.info(
-              `[${peripheralId}] Lock is requesting initial settings data, sending now.`
-            );
-            this.sendPeripheralSettings(this.lockMAC);
+          switch (dataString) {
+            case '<req_data>\r\n': {
+              logger.info(
+                `[${peripheralId}] Lock is requesting initial settings data, sending now.`
+              );
+              this.sendPeripheralSettings();
+              break;
+            }
+            default: {
+              if (!dataString.endsWith('\r\n')) {
+                break;
+              }
+              dataString = dataString.replace('\r\n');
+              const dataRegex = /^<[0-9a-zA-Z_]+>[0-9]+/g;
+              if (dataString.match(dataRegex).length === 0) {
+                break;
+              }
+              // e.g. <m_xlk>1800\r\n
+              let keyValueToken = dataString
+                .replace('<', '') // remove first < character
+                .split('>');
+              logger.info(`[${peripheralId}] Received data ${keyValueToken}`);
+              if (keyValueToken.length !== 2) {
+                break;
+              }
+              let settingTag = keyValueToken[0];
+              let settingValue = keyValueToken[1];
+              if (!this.settingPromiseResolves[settingTag]) {
+                break;
+              }
+              this.settingPromiseResolves[settingTag](settingValue);
+              this.settingPromiseResolves[settingTag] = null;
+              break;
+            }
           }
           this.peripheralBuffer[this.lockMAC].dataStringHistory[
             i
