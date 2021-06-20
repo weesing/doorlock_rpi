@@ -14,7 +14,7 @@ export class BLEEngine extends DataReceiver {
     this._connectionManager = null;
 
     this._initialPeripheralSyncTimeout = {};
-    this.settingPromiseResolves = {};
+    this.commandPromiseResolves = {};
   }
 
   // Overwrite
@@ -72,7 +72,7 @@ export class BLEEngine extends DataReceiver {
   async getLockSetting(settingTag) {
     this._outbox.sendMessage(this.lockMAC, `get_${settingTag}`, ``);
     return await new Promise((resolve) => {
-      this.settingPromiseResolves[settingTag] = resolve;
+      this.commandPromiseResolves[settingTag] = resolve;
     }).then((result) => {
       logger.info(`Retrieved result ${result}`);
       return result;
@@ -146,42 +146,46 @@ export class BLEEngine extends DataReceiver {
       const dataStringHistory =
         this.peripheralBuffer[this.lockMAC].dataStringHistory;
       for (let i = 0; i < dataStringHistory.length; ++i) {
-        const dataString = dataStringHistory[i].dataString;
         if (!dataStringHistory[i].processed) {
-          switch (dataString) {
-            case '<req_data>\r\n': {
-              logger.info(
-                `[${peripheralId}] Lock is requesting initial settings data, sending now.`
-              );
-              this.sendPeripheralSettings();
-              break;
+          const dataString = dataStringHistory[i].dataString;
+          if (!dataString.endsWith('\r\n')) {
+            // Incomplete history, skip
+            continue;
+          }
+          let tempDataString = dataString.replace('\r\n', '');
+
+          // e.g. <m_xlk>1800\r\n
+          const dataRegex = /^<[0-9a-zA-Z_]+>[0-9]*/g;
+          const matches = tempDataString.match(dataRegex);
+          if (!_.isNil(matches) && matches.length > 0) {
+            let keyValueToken = tempDataString
+              .replace('<', '') // remove first < character
+              .split('>');
+            logger.info(`[${peripheralId}] Received command ${keyValueToken}`);
+            if (keyValueToken.length < 1) {
+              continue;
             }
-            default: {
-              if (!dataString.endsWith('\r\n')) {
+            let tag = keyValueToken[0];
+            switch (tag) {
+              case 'req_data': {
+                logger.info(
+                  `[${peripheralId}] Lock is requesting initial settings data, sending now.`
+                );
+                this.sendPeripheralSettings();
                 break;
               }
-              let tempDataString = dataString.replace('\r\n', '');
-              const dataRegex = /^<[0-9a-zA-Z_]+>[0-9]+/g;
-              const matches = tempDataString.match(dataRegex);
-              if (_.isNil(matches) || matches.length === 0) {
+              default: {
+                if (keyValueToken.length !== 2) {
+                  continue;
+                }
+                let settingValue = parseInt(keyValueToken[1]);
+                if (!this.commandPromiseResolves[tag]) {
+                  break;
+                }
+                this.commandPromiseResolves[tag](settingValue);
+                this.commandPromiseResolves[tag] = null;
                 break;
               }
-              // e.g. <m_xlk>1800\r\n
-              let keyValueToken = tempDataString
-                .replace('<', '') // remove first < character
-                .split('>');
-              logger.info(`[${peripheralId}] Received data ${keyValueToken}`);
-              if (keyValueToken.length !== 2) {
-                break;
-              }
-              let settingTag = keyValueToken[0];
-              let settingValue = parseInt(keyValueToken[1]);
-              if (!this.settingPromiseResolves[settingTag]) {
-                break;
-              }
-              this.settingPromiseResolves[settingTag](settingValue);
-              this.settingPromiseResolves[settingTag] = null;
-              break;
             }
           }
           this.peripheralBuffer[this.lockMAC].dataStringHistory[
