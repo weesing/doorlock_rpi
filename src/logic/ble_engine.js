@@ -14,6 +14,7 @@ export class BLEEngine extends DataReceiver {
     this._connectionManager = null;
 
     this._initialPeripheralSyncTimeout = {};
+    this.settingPromiseResolves = {};
   }
 
   // Overwrite
@@ -69,11 +70,12 @@ export class BLEEngine extends DataReceiver {
   }
 
   async getLockSetting(settingTag) {
-    this._outbox.sendMessage(this.lockMAC, `get_${settingTag}`, `;`);
+    this._outbox.sendMessage(this.lockMAC, `get_${settingTag}`, ``);
     return await new Promise((resolve) => {
       this.settingPromiseResolves[settingTag] = resolve;
     }).then((result) => {
       logger.info(`Retrieved result ${result}`);
+      return result;
     });
   }
 
@@ -115,7 +117,7 @@ export class BLEEngine extends DataReceiver {
   }
 
   async onDataReceived(peripheral, bufferData, isNotification) {
-    super.onDataReceived(peripheral, bufferData, isNotification);
+    await super.onDataReceived(peripheral, bufferData, isNotification);
     const peripheralId = peripheral.id;
     if (peripheralId === this.rfidMAC) {
       const lockCharacteristic =
@@ -143,7 +145,7 @@ export class BLEEngine extends DataReceiver {
     } else if (peripheralId === this.lockMAC) {
       const dataStringHistory =
         this.peripheralBuffer[this.lockMAC].dataStringHistory;
-      for (let i = 0; i < dataStringHistory.length - 1; ++i) {
+      for (let i = 0; i < dataStringHistory.length; ++i) {
         const dataString = dataStringHistory[i].dataString;
         if (!dataStringHistory[i].processed) {
           switch (dataString) {
@@ -158,9 +160,10 @@ export class BLEEngine extends DataReceiver {
               if (!dataString.endsWith('\r\n')) {
                 break;
               }
-              let tempDataString = dataString.replace('\r\n');
+              let tempDataString = dataString.replace('\r\n', '');
               const dataRegex = /^<[0-9a-zA-Z_]+>[0-9]+/g;
-              if (tempDataString.match(dataRegex).length === 0) {
+              const matches = tempDataString.match(dataRegex);
+              if (_.isNil(matches) || matches.length === 0) {
                 break;
               }
               // e.g. <m_xlk>1800\r\n
@@ -172,7 +175,7 @@ export class BLEEngine extends DataReceiver {
                 break;
               }
               let settingTag = keyValueToken[0];
-              let settingValue = keyValueToken[1];
+              let settingValue = parseInt(keyValueToken[1]);
               if (!this.settingPromiseResolves[settingTag]) {
                 break;
               }
