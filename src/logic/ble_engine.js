@@ -161,7 +161,7 @@ export class BLEEngine extends DataReceiver {
             let keyValueToken = tempDataString
               .replace('<', '') // remove first < character
               .split('>');
-            logger.info(`[${peripheralId}] Received command ${keyValueToken}`);
+            logger.info(`[${peripheralId}] Received command/data ${keyValueToken}`);
             if (keyValueToken.length < 1) {
               continue;
             }
