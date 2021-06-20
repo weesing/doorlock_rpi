@@ -85,13 +85,13 @@ export class BLEEngine extends DataReceiver {
       'm_xlk',
       'm_lk',
       'm_idl',
-      // 'l_en',
-      // 'l_xen',
-      // 'l_step',
-      // 'l_ms',
-      // 'a_rdct',
-      // 'a_lk',
-      // 'a_xlk'
+      'l_en',
+      'l_xen',
+      'l_step',
+      'l_ms',
+      'a_rdct',
+      'a_lk',
+      'a_xlk'
     ]) {
       promises.push(
         new Promise((resolve) => {
@@ -111,13 +111,13 @@ export class BLEEngine extends DataReceiver {
         'mainServoUnlockFrequency': values[0],
         'mainServoLockFrequency': values[1],
         'mainServoIdleFrequency': values[2],
-        // 'linearServoEngagedAngle': values[3],
-        // 'linearServoDisengagedAngle': values[4],
-        // 'linearServoStep': values[5],
-        // 'linearServoMs': values[6],
-        // 'adxlReadSampleCount': values[7],
-        // 'adxlLockAngle': values[8],
-        // 'adxlUnlockAngle': values[9]
+        'linearServoEngagedAngle': values[3],
+        'linearServoDisengagedAngle': values[4],
+        'linearServoStep': values[5],
+        'linearServoMs': values[6],
+        'adxlReadSampleCount': values[7],
+        'adxlLockAngle': values[8],
+        'adxlUnlockAngle': values[9]
       }
     });
   }
