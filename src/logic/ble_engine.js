@@ -45,36 +45,39 @@ export class BLEEngine extends DataReceiver {
     this._outbox.sendMessage(peripheralId, `data`, payload);
   }
 
-  sendPeripheralSettings() {
+  sendPeripheralSettings(peripheralId) {
     // Send lock MAC intialization settings
-    // Send all the settings.
-    logger.info(`Sending settings....`);
-    const mainServoSettings = _.get(config, `lock.settings.main_servo`);
-    const linearServoSettings = _.get(config, `lock.settings.linear_servo`);
-    const adxlSettings = _.get(config, `lock.settings.adxl`);
+    if (peripheralId === this.lockMAC) {
+      // Send all the settings.
+      logger.info(`Sending settings....`);
+      const mainServoSettings = _.get(config, `lock.settings.main_servo`);
+      const linearServoSettings = _.get(config, `lock.settings.linear_servo`);
+      const adxlSettings = _.get(config, `lock.settings.adxl`);
 
-    for (const setting of [
-      { tag: 'm_xlk', value: mainServoSettings.frequencies.unlock },
-      { tag: 'm_lk', value: mainServoSettings.frequencies.lock },
-      { tag: 'm_idl', value: mainServoSettings.frequencies.idle },
-      { tag: 'l_en', value: linearServoSettings.angles.engaged },
-      { tag: 'l_xen', value: linearServoSettings.angles.disengaged },
-      { tag: 'l_step', value: linearServoSettings.step },
-      { tag: 'l_ms', value: linearServoSettings.ms },
-      { tag: `a_rdct`, value: adxlSettings.max_read_count },
-      { tag: `a_lk`, value: adxlSettings.angles.locked },
-      { tag: `a_xlk`, value: adxlSettings.angles.unlocked }
-    ]) {
-      this._outbox.sendMessage(this.lockMAC, setting.tag, `${setting.value}`);
+      for (const setting of [
+        { tag: 'm_xlk', value: mainServoSettings.frequencies.unlock },
+        { tag: 'm_lk', value: mainServoSettings.frequencies.lock },
+        { tag: 'm_idl', value: mainServoSettings.frequencies.idle },
+        { tag: 'l_en', value: linearServoSettings.angles.engaged },
+        { tag: 'l_xen', value: linearServoSettings.angles.disengaged },
+        { tag: 'l_step', value: linearServoSettings.step },
+        { tag: 'l_ms', value: linearServoSettings.ms },
+        { tag: `a_rdct`, value: adxlSettings.max_read_count },
+        { tag: `a_lk`, value: adxlSettings.angles.locked },
+        { tag: `a_xlk`, value: adxlSettings.angles.unlocked }
+      ]) {
+        this._outbox.sendMessage(this.lockMAC, setting.tag, `${setting.value}`);
+      }
     }
   }
 
-  async getLockSetting(settingTag) {
-    this._outbox.sendMessage(this.lockMAC, `get_${settingTag}`, ``);
-    return await new Promise((resolve) => {
-      this.commandPromiseResolves[settingTag] = resolve;
+  async getLockSetting(tag) {
+    return new Promise((resolve) => {
+      this.commandPromiseResolves[tag] = resolve;
+      // Send the request
+      this._outbox.sendMessage(this.lockMAC, `get_${tag}`, ``);
     }).then((result) => {
-      logger.info(`Retrieved result ${result}`);
+      logger.info(`Retrieved result ${tag} - ${result}`);
       return result;
     });
   }
@@ -93,32 +96,22 @@ export class BLEEngine extends DataReceiver {
       'a_lk',
       'a_xlk'
     ]) {
-      promises.push(
-        new Promise((resolve) => {
-          // Promise is resolved elsewhere. See onDataReceived.
-          this.commandPromiseResolves[tag] = resolve;
-        }).then((result) => {
-          logger.info(`Retrieved result ${tag} - ${result}`);
-          return result;
-        })
-      );
-      // Send the requests
-      this._outbox.sendMessage(this.lockMAC, `get_${tag}`, ``);
+      promises.push(this.getLockSetting(tag));
     }
 
     return Promise.all(promises).then((values) => {
       return {
-        'mainServoUnlockFrequency': values[0],
-        'mainServoLockFrequency': values[1],
-        'mainServoIdleFrequency': values[2],
-        'linearServoEngagedAngle': values[3],
-        'linearServoDisengagedAngle': values[4],
-        'linearServoStep': values[5],
-        'linearServoMs': values[6],
-        'adxlReadSampleCount': values[7],
-        'adxlLockAngle': values[8],
-        'adxlUnlockAngle': values[9]
-      }
+        mainServoUnlockFrequency: values[0],
+        mainServoLockFrequency: values[1],
+        mainServoIdleFrequency: values[2],
+        linearServoEngagedAngle: values[3],
+        linearServoDisengagedAngle: values[4],
+        linearServoStep: values[5],
+        linearServoMs: values[6],
+        adxlReadSampleCount: values[7],
+        adxlLockAngle: values[8],
+        adxlUnlockAngle: values[9]
+      };
     });
   }
 
@@ -212,11 +205,11 @@ export class BLEEngine extends DataReceiver {
             }
             let tag = keyValueToken[0];
             switch (tag) {
-              case 'req_data': {
+              case 'req_lock_data': {
                 logger.info(
                   `[${peripheralId}] Lock is requesting initial settings data, sending now.`
                 );
-                this.sendPeripheralSettings();
+                this.sendPeripheralSettings(this.lockMAC);
                 break;
               }
               default: {
