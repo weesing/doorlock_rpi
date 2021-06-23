@@ -45,7 +45,7 @@ export class BLEEngine extends DataReceiver {
     this._outbox.sendMessage(peripheralId, `data`, payload);
   }
 
-  sendPeripheralSettings(peripheralId) {
+  sendPeripheralSettings(peripheralId = this.lockMAC) {
     // Send lock MAC intialization settings
     if (peripheralId === this.lockMAC) {
       // Send all the settings.

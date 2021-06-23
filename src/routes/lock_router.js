@@ -17,13 +17,9 @@ router.get('/settings', async (req, res, next) => {
 });
 
 router.post('/settings', (req, res, next) => {
-  const body = req.body;
-  const peripheralId = body.peripheralId.toLowerCase();
-  if (peripheralId) {
-    StaticGlobals.getInstance()
-      .getVar('ble_engine')
-      .sendPeripheralSettings(peripheralId);
-  }
+  StaticGlobals.getInstance()
+    .getVar('ble_engine')
+    .sendPeripheralSettings();
   res.jsonp({
     message: 'Lock settings sent'
   });
