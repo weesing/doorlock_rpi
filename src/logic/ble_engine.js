@@ -48,26 +48,30 @@ export class BLEEngine extends DataReceiver {
 
   sendPeripheralSettings({
     peripheralId = this.lockMAC,
-    settingTag,
-    settingValue
-  }) {
+    settingName = '',
+    settingValue = 0
+  } = {}) {
     // Send lock MAC intialization settings
     if (peripheralId === this.lockMAC) {
-      if (_.isNil(settingTag)) {
+      if (_.isEmpty(settingName)) {
         // Send all the settings.
-        const setting = new LockSettings();
-        setting.getSettingsMap().then((settingsMap) => {
-          logger.info(`[${this.lockMAC}] Sending settings....`);
-          for (const setting of Object.values(settingsMap)) {
-            this._outbox.sendMessage(
-              this.lockMAC,
-              setting.tag,
-              `${setting.value}`
-            );
-          }
-        });
-      } else {
+        LockSettings.getInstance()
+          .getSettingsMap()
+          .then((settingsMap) => {
+            logger.info(`[${this.lockMAC}] Sending settings....`);
+            for (const setting of Object.values(settingsMap)) {
+              this._outbox.sendMessage(
+                this.lockMAC,
+                setting.tag,
+                `${setting.value}`
+              );
+            }
+          });
+      } else if (settingValue) {
+        // A specific setting is requested. Take the value and try to save and send.
+        LockSettings.getInstance().saveSetting({ settingName, settingValue });
         settingValue = `${settingValue}`;
+        const settingTag = SETTINGS_METADATA[settingName].tag;
         this._outbox.sendMessage(this.lockMAC, settingTag, settingValue);
       }
     }

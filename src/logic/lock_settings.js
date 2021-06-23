@@ -69,20 +69,21 @@ export class LockSettings {
    * @returns value of setting
    */
   async getSettingValue(settingName) {
-    let settingValue = await this._redisClient.get(`settings.${settingsName}`);
+    let settingValue = await this._redisClient.get(`settings.${settingName}`);
     if (!settingValue) {
       // read from config and populate back to redis
       logger.warn(
-        `Setting ${settingsName} cannot be found. Populating from configuration.`
+        `Setting ${settingName} cannot be found. Populating from configuration.`
       );
       const configPath = SETTINGS_METADATA[settingName].config;
       settingValue = _.get(config, configPath);
       logger.info(
-        `Setting ${settingsName} default retrieved from config - ${settingValue}`
+        `Setting ${settingName} default retrieved from config - ${settingValue}`
       );
       if (settingValue) {
-        logger.info(`Populating ${settingsName} back to data store.`);
-        await this._redisClient.set(`settings.${settingsName}`, settingValue);
+        await this.saveSetting({ settingName, settingValue });
+        logger.info(`Populating ${settingName} back to data store.`);
+        await this._redisClient.set(`settings.${settingName}`, settingValue);
       }
     }
     return settingValue;
@@ -96,5 +97,10 @@ export class LockSettings {
     logger.trace(settingsMap);
     logger.trace(`Settings map retrieved`);
     return settingsMap;
+  }
+
+  async saveSetting({ settingName, settingValue }) {
+    logger.info(`Populating ${settingName} back to data store.`);
+    return await this._redisClient.set(`settings.${settingName}`, settingValue);
   }
 }
