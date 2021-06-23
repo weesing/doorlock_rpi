@@ -5,6 +5,7 @@ import { SecretsLoader } from '../lib/secrets_loader';
 import { CardsLogic } from './cards';
 import { ConnectionManager } from './connection_manager';
 import { DataReceiver } from './data_receiver';
+import { LockSettings, SETTINGS_METADATA } from './lock_settings';
 import { Outbox } from './outbox';
 
 export class BLEEngine extends DataReceiver {
@@ -54,31 +55,17 @@ export class BLEEngine extends DataReceiver {
     if (peripheralId === this.lockMAC) {
       if (_.isNil(settingTag)) {
         // Send all the settings.
-        logger.info(`[${this.lockMAC}] Sending settings....`);
-        const mainServoSettings = _.get(config, `lock.settings.main_servo`);
-        const linearServoSettings = _.get(config, `lock.settings.linear_servo`);
-        const adxlSettings = _.get(config, `lock.settings.adxl`);
-        const oledSettings = _.get(config, `lock.settings.oled`);
-
-        for (const setting of [
-          { tag: 'm_xlk', value: mainServoSettings.frequencies.unlock },
-          { tag: 'm_lk', value: mainServoSettings.frequencies.lock },
-          { tag: 'm_idl', value: mainServoSettings.frequencies.idle },
-          { tag: 'l_en', value: linearServoSettings.angles.engaged },
-          { tag: 'l_xen', value: linearServoSettings.angles.disengaged },
-          { tag: 'l_step', value: linearServoSettings.step },
-          { tag: 'l_ms', value: linearServoSettings.ms },
-          { tag: `a_rdct`, value: adxlSettings.max_read_count },
-          { tag: `a_lk`, value: adxlSettings.angles.locked },
-          { tag: `a_xlk`, value: adxlSettings.angles.unlocked },
-          { tag: `o_dbg`, value: oledSettings.debug_display }
-        ]) {
-          this._outbox.sendMessage(
-            this.lockMAC,
-            setting.tag,
-            `${setting.value}`
-          );
-        }
+        const setting = new LockSettings();
+        setting.getSettingsMap().then((settingsMap) => {
+          logger.info(`[${this.lockMAC}] Sending settings....`);
+          for (const setting of Object.values(settingsMap)) {
+            this._outbox.sendMessage(
+              this.lockMAC,
+              setting.tag,
+              `${setting.value}`
+            );
+          }
+        });
       } else {
         settingValue = `${settingValue}`;
         this._outbox.sendMessage(this.lockMAC, settingTag, settingValue);
@@ -98,37 +85,22 @@ export class BLEEngine extends DataReceiver {
   }
 
   async getAllLockSettings() {
+    const tags = Object.values(SETTINGS_METADATA).map((setting) => setting.tag);
     const promises = [];
-    for (const tag of [
-      'm_xlk',
-      'm_lk',
-      'm_idl',
-      'l_en',
-      'l_xen',
-      'l_step',
-      'l_ms',
-      'a_rdct',
-      'a_lk',
-      'a_xlk',
-      'o_dbg'
-    ]) {
+    for (const tag of tags) {
+      // The order of promises resolutions will be according to tags,
+      // which is based on the order of SETTINGS_METADATA.
       promises.push(this.getLockSetting(tag));
     }
 
     return Promise.all(promises).then((values) => {
-      return {
-        mainServoUnlockFrequency: values[0],
-        mainServoLockFrequency: values[1],
-        mainServoIdleFrequency: values[2],
-        linearServoEngagedAngle: values[3],
-        linearServoDisengagedAngle: values[4],
-        linearServoStep: values[5],
-        linearServoMs: values[6],
-        adxlReadSampleCount: values[7],
-        adxlLockAngle: values[8],
-        adxlUnlockAngle: values[9],
-        oledDebugDisplay: values[10]
-      };
+      const result = {};
+      const settingNames = Object.keys(SETTINGS_METADATA);
+      for (let i = 0; i < values.length; ++i) {
+        const settingName = settingNames[i];
+        result[settingName] = values[i];
+      }
+      return result;
     });
   }
 
@@ -205,9 +177,11 @@ export class BLEEngine extends DataReceiver {
             // Incomplete history, skip
             continue;
           }
+
+          // e.g. <tag>value\r\n OR <tag>\r\n
           let tempDataString = dataString.replace('\r\n', '');
 
-          // e.g. <m_xlk>1800\r\n
+          // e.g. <tag>value OR <tag>
           const dataRegex = /^<[0-9a-zA-Z_]+>[0-9]*/g;
           const matches = tempDataString.match(dataRegex);
           if (!_.isNil(matches) && matches.length > 0) {
@@ -230,6 +204,7 @@ export class BLEEngine extends DataReceiver {
                 break;
               }
               default: {
+                // lock is trying to send back the requested setting value. e.g. <m_xlk>1800\r\n
                 if (keyValueToken.length !== 2) {
                   continue;
                 }
