@@ -45,30 +45,43 @@ export class BLEEngine extends DataReceiver {
     this._outbox.sendMessage(peripheralId, `data`, payload);
   }
 
-  sendPeripheralSettings(peripheralId = this.lockMAC) {
+  sendPeripheralSettings({
+    peripheralId = this.lockMAC,
+    settingTag,
+    settingValue
+  }) {
     // Send lock MAC intialization settings
     if (peripheralId === this.lockMAC) {
-      // Send all the settings.
-      logger.info(`[${this.lockMAC}] Sending settings....`);
-      const mainServoSettings = _.get(config, `lock.settings.main_servo`);
-      const linearServoSettings = _.get(config, `lock.settings.linear_servo`);
-      const adxlSettings = _.get(config, `lock.settings.adxl`);
-      const oledSettings = _.get(config, `lock.settings.oled`);
+      if (_.isNil(settingTag)) {
+        // Send all the settings.
+        logger.info(`[${this.lockMAC}] Sending settings....`);
+        const mainServoSettings = _.get(config, `lock.settings.main_servo`);
+        const linearServoSettings = _.get(config, `lock.settings.linear_servo`);
+        const adxlSettings = _.get(config, `lock.settings.adxl`);
+        const oledSettings = _.get(config, `lock.settings.oled`);
 
-      for (const setting of [
-        { tag: 'm_xlk', value: mainServoSettings.frequencies.unlock },
-        { tag: 'm_lk', value: mainServoSettings.frequencies.lock },
-        { tag: 'm_idl', value: mainServoSettings.frequencies.idle },
-        { tag: 'l_en', value: linearServoSettings.angles.engaged },
-        { tag: 'l_xen', value: linearServoSettings.angles.disengaged },
-        { tag: 'l_step', value: linearServoSettings.step },
-        { tag: 'l_ms', value: linearServoSettings.ms },
-        { tag: `a_rdct`, value: adxlSettings.max_read_count },
-        { tag: `a_lk`, value: adxlSettings.angles.locked },
-        { tag: `a_xlk`, value: adxlSettings.angles.unlocked },
-        { tag: `o_dbg`, value: oledSettings.debug_display }
-      ]) {
-        this._outbox.sendMessage(this.lockMAC, setting.tag, `${setting.value}`);
+        for (const setting of [
+          { tag: 'm_xlk', value: mainServoSettings.frequencies.unlock },
+          { tag: 'm_lk', value: mainServoSettings.frequencies.lock },
+          { tag: 'm_idl', value: mainServoSettings.frequencies.idle },
+          { tag: 'l_en', value: linearServoSettings.angles.engaged },
+          { tag: 'l_xen', value: linearServoSettings.angles.disengaged },
+          { tag: 'l_step', value: linearServoSettings.step },
+          { tag: 'l_ms', value: linearServoSettings.ms },
+          { tag: `a_rdct`, value: adxlSettings.max_read_count },
+          { tag: `a_lk`, value: adxlSettings.angles.locked },
+          { tag: `a_xlk`, value: adxlSettings.angles.unlocked },
+          { tag: `o_dbg`, value: oledSettings.debug_display }
+        ]) {
+          this._outbox.sendMessage(
+            this.lockMAC,
+            setting.tag,
+            `${setting.value}`
+          );
+        }
+      } else {
+        settingValue = `${settingValue}`;
+        this._outbox.sendMessage(this.lockMAC, settingTag, settingValue);
       }
     }
   }
@@ -132,7 +145,7 @@ export class BLEEngine extends DataReceiver {
   createInitialSyncTimeout(peripheralId) {
     this.clearInitialSyncTimeout(peripheralId);
     this._initialPeripheralSyncTimeout[peripheralId] = setTimeout(() => {
-      this.sendPeripheralSettings(peripheralId);
+      this.sendPeripheralSettings({ peripheralId });
     }, _.get(config, `lock.timeout`));
     logger.info(`[${peripheralId}] Initial sync timeout created.`);
   }
@@ -213,7 +226,7 @@ export class BLEEngine extends DataReceiver {
                 logger.info(
                   `[${peripheralId}] Lock is requesting initial settings data, sending now.`
                 );
-                this.sendPeripheralSettings(this.lockMAC);
+                this.sendPeripheralSettings();
                 break;
               }
               default: {
