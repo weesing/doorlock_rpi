@@ -42,6 +42,9 @@
           "locked": 580,
           "unlocked": 436
         }
+      },
+      "oled": {
+        "debug_display": 1
       }
     }
   }

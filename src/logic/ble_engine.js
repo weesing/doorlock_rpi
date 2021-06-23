@@ -53,6 +53,7 @@ export class BLEEngine extends DataReceiver {
       const mainServoSettings = _.get(config, `lock.settings.main_servo`);
       const linearServoSettings = _.get(config, `lock.settings.linear_servo`);
       const adxlSettings = _.get(config, `lock.settings.adxl`);
+      const oledSettings = _.get(config, `lock.settings.oled`);
 
       for (const setting of [
         { tag: 'm_xlk', value: mainServoSettings.frequencies.unlock },
@@ -64,7 +65,8 @@ export class BLEEngine extends DataReceiver {
         { tag: 'l_ms', value: linearServoSettings.ms },
         { tag: `a_rdct`, value: adxlSettings.max_read_count },
         { tag: `a_lk`, value: adxlSettings.angles.locked },
-        { tag: `a_xlk`, value: adxlSettings.angles.unlocked }
+        { tag: `a_xlk`, value: adxlSettings.angles.unlocked },
+        { tag: `o_dbg`, value: oledSettings.debug_display }
       ]) {
         this._outbox.sendMessage(this.lockMAC, setting.tag, `${setting.value}`);
       }
@@ -94,7 +96,8 @@ export class BLEEngine extends DataReceiver {
       'l_ms',
       'a_rdct',
       'a_lk',
-      'a_xlk'
+      'a_xlk',
+      'o_dbg'
     ]) {
       promises.push(this.getLockSetting(tag));
     }
@@ -110,7 +113,8 @@ export class BLEEngine extends DataReceiver {
         linearServoMs: values[6],
         adxlReadSampleCount: values[7],
         adxlLockAngle: values[8],
-        adxlUnlockAngle: values[9]
+        adxlUnlockAngle: values[9],
+        oledDebugDisplay: values[10]
       };
     });
   }
