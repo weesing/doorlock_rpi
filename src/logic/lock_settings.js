@@ -69,7 +69,7 @@ export class LockSettings {
    * @returns value of setting
    */
   async getSettingValue(settingName) {
-    let settingValue = await this._redisClient.get(`settings.${settingName}`);
+    let settingValue = await this._redisClient.get(`settings:${settingName}`);
     if (!settingValue) {
       // read from config and populate back to redis
       logger.warn(
