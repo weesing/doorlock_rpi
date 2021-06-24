@@ -49,7 +49,7 @@ export class BLEEngine extends DataReceiver {
   sendPeripheralSettings({
     peripheralId = this.lockMAC,
     settingName = '',
-    settingValue = 0
+    settingValue = -1
   } = {}) {
     // Send lock MAC intialization settings
     if (peripheralId === this.lockMAC) {
@@ -67,7 +67,7 @@ export class BLEEngine extends DataReceiver {
               );
             }
           });
-      } else if (settingValue) {
+      } else if (settingValue >= 0) {
         // A specific setting is requested. Take the value and try to save and send.
         LockSettings.getInstance().saveSetting({ settingName, settingValue });
         settingValue = `${settingValue}`;
