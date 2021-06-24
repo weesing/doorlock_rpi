@@ -101,6 +101,6 @@ export class LockSettings {
 
   async saveSetting({ settingName, settingValue }) {
     logger.info(`Populating ${settingName} back to data store.`);
-    return await this._redisClient.set(`settings.${settingName}`, settingValue);
+    return await this._redisClient.set(`settings:${settingName}`, settingValue);
   }
 }
