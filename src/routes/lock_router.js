@@ -27,3 +27,10 @@ router.post('/settings', (req, res, next) => {
     message: 'Lock settings sent'
   });
 });
+
+router.post('/reboot', (req, res, next) => {
+  StaticGlobals.getInstance().getVar('ble_engine').rebootLock();
+  res.jsonp({
+    message: 'reboot'
+  });
+});

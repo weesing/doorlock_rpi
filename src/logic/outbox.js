@@ -35,7 +35,7 @@ export class Outbox {
     }, _.get(config, `engine.outbox.flush_interval`, 500));
   }
 
-  sendMessage(peripheralId, tag, payload) {
+  sendMessage(peripheralId, tag, payload = '') {
     if (!this._outboxMessageMap[peripheralId]) {
       this._outboxMessageMap[peripheralId] = [];
     }

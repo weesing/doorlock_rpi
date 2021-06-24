@@ -42,6 +42,10 @@ export class BLEEngine extends DataReceiver {
     this._outbox.sendMessage(this.lockMAC, `lock`, lockSecret);
   }
 
+  rebootLock() {
+    this._outbox.sendMessage(this.lockMAC, `reboot`);
+  }
+
   sendData(peripheralId, payload) {
     this._outbox.sendMessage(peripheralId, `data`, payload);
   }
