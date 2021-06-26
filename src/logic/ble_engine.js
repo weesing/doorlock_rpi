@@ -174,6 +174,8 @@ export class BLEEngine extends DataReceiver {
       );
       if (verified) {
         this.toggleLock();
+      } else {
+        logger.warn(`Unauthorized key - ${key}`);
       }
     } else if (peripheralId === this.lockMAC) {
       const dataStringHistory =
