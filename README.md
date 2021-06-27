@@ -28,12 +28,19 @@ npm install
 # Run the app
 Using `nodemon`
 ```
-nodemon
+sudo nodemon
 ```
 OR using `node`
 ```
-node
+sudo npm start
 ```
+> The command requires `sudo` because the server needs access to the device.
+# Running in test mode
+```
+npm run testmode
+```
+- This command will run the ble_engine_test.js instead.
+- This logic class (ble_engine_test) uses the `testMAC` in your secrets JSON file to test connectivity.
 
 # References
 - https://www.npmjs.com/package/noble
