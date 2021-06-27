@@ -39,7 +39,7 @@ sudo npm start
 ```
 npm run testmode
 ```
-- This command will run the ble_engine_test.js instead.
+- This command will run the `ble_engine_test.js` instead.
 - This logic class (ble_engine_test) uses the `testMAC` in your secrets JSON file to test connectivity.
 
 # References
