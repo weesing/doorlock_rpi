@@ -83,6 +83,9 @@ export class BLEEngine extends DataReceiver {
         this._outbox.sendMessage(this.lockMAC, settingTag, settingValue);
       }
     }
+    else if (peripheralId === this.rfidMAC) {
+      this._outbox.sendMessage(this.rfidMAC, `init`);
+    }
   }
 
   async getLockSetting(tag) {
@@ -189,6 +192,15 @@ export class BLEEngine extends DataReceiver {
                 logger.info(
                   `[${peripheralId}] RFID requesting data, nothing to send.`
                 );
+                break;
+              }
+              case 'mfrc_ver': {
+                logger.info(`RFID version found - 0x${keyValueToken[1]}`);
+                break;
+              }
+              case 'mfrc_failed': {
+                logger.warn(`[${this.rfidMAC}] MFRC (RFID) module failed to communicate. Resetting RFID module`);
+                this.rebootRFID();
                 break;
               }
               case 'key': {
