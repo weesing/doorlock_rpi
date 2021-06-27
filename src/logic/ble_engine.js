@@ -46,6 +46,10 @@ export class BLEEngine extends DataReceiver {
     this._outbox.sendMessage(this.lockMAC, `reboot`);
   }
 
+  rebootRFID() {
+    this._outbox.sendMessage(this.rfidMAC, `reboot`);
+  }
+
   sendData(peripheralId, payload) {
     this._outbox.sendMessage(peripheralId, `data`, payload);
   }
@@ -189,9 +193,12 @@ export class BLEEngine extends DataReceiver {
               }
               case 'key': {
                 const lockCharacteristic =
-                  this.connectionManager.connectionStatuses[this.lockMAC].characteristic;
+                  this.connectionManager.connectionStatuses[this.lockMAC]
+                    .characteristic;
                 if (!lockCharacteristic) {
-                  logger.info(`Door lock not connected yet, aborting data sending.`);
+                  logger.info(
+                    `Door lock not connected yet, aborting data sending.`
+                  );
                   return;
                 }
                 if (keyValueToken.length !== 2) {
@@ -215,10 +222,10 @@ export class BLEEngine extends DataReceiver {
                 );
                 if (verified) {
                   this.toggleLock();
-                  this._outbox.sendMessage(this.rfidMAC, `auth`, ``);
+                  this._outbox.sendMessage(this.rfidMAC, `auth`);
                 } else {
                   logger.warn(`Unauthorized key - ${keyValue}`);
-                  this._outbox.sendMessage(this.rfidMAC, `unauth`, ``);
+                  this._outbox.sendMessage(this.rfidMAC, `unauth`);
                 }
                 break;
               }
@@ -228,7 +235,7 @@ export class BLEEngine extends DataReceiver {
             i
           ].processed = true;
         }
-      }      
+      }
     } else if (peripheralId === this.lockMAC) {
       const dataStringHistory =
         this.peripheralBuffer[this.lockMAC].dataStringHistory;
