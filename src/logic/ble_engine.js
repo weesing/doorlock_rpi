@@ -183,9 +183,8 @@ export class BLEEngine extends DataReceiver {
             switch (tag) {
               case 'req_rfid_data': {
                 logger.info(
-                  `[${peripheralId}] Lock is requesting initial settings data, sending now.`
+                  `[${peripheralId}] RFID requesting data, nothing to send.`
                 );
-                this.sendPeripheralSettings();
                 break;
               }
               case 'key': {
@@ -198,9 +197,7 @@ export class BLEEngine extends DataReceiver {
                 if (keyValueToken.length !== 2) {
                   continue;
                 }
-                let keyValue = keyValueToken[1];
-                let keyBuffer = Buffer.from(keyValue);
-                keyValue = keyBuffer.toString('hex');
+                let keyValue = keyValueToken[1].toLowerCase();
                 const validKeys = await CardsLogic.getInstance().getKeys();
                 let verified = false;
                 for (const key of validKeys) {
@@ -225,6 +222,9 @@ export class BLEEngine extends DataReceiver {
               }
             }
           }
+          this.peripheralBuffer[this.rfidMAC].dataStringHistory[
+            i
+          ].processed = true;
         }
       }      
     } else if (peripheralId === this.lockMAC) {
