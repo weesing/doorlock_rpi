@@ -42,6 +42,11 @@ export class PeripheralBuffer {
       .filter((token) => token !== '')
       .map((token) => `${token}${DETECT_DELIMITER}`); // put back the delimiters
 
+    // if the received data starts with delimiter, put back the starting delimiter as first token.
+    if (receivedString.startsWith(DETECT_DELIMITER)) {
+      receivedStringTokens.unshift(DETECT_DELIMITER);
+    }
+
     /*
      STEP 2: 
      Check whether the received string ends with delimiter. 
@@ -65,22 +70,18 @@ export class PeripheralBuffer {
     */
     let lastHistory;
     if (this.dataStringHistory.length > 0) {
-      lastHistory = this.dataStringHistory.splice(
-        this.dataStringHistory.length - 1,
-        1
-      )[0];
-    }
-    let currReceivedStringToken = receivedStringTokens.shift();
-    let lastHistoryDataString = lastHistory ? lastHistory.dataString : '';
-    if (lastHistoryDataString.endsWith(DETECT_DELIMITER)) {
-      // last history already ended, push it back.
-      this.addHistory(lastHistoryDataString);
-      // push new history data onto history
-      this.addHistory(currReceivedStringToken);
-    } else {
-      // last history not ended, create new history with appended data string
-      lastHistoryDataString = `${lastHistoryDataString}${currReceivedStringToken}`;
-      this.addHistory(lastHistoryDataString);
+      lastHistory = this.dataStringHistory[this.dataStringHistory.length - 1];
+      let currReceivedStringToken = receivedStringTokens.shift();
+      let lastHistoryDataString = lastHistory ? lastHistory.dataString : '';
+      if (lastHistoryDataString.endsWith(DETECT_DELIMITER)) {
+        // push new history data onto history
+        this.addHistory(currReceivedStringToken);
+      } else {
+        // last history not ended, create new history with appended data string
+        lastHistoryDataString = `${lastHistoryDataString}${currReceivedStringToken}`;
+        this.dataStringHistory[this.dataStringHistory.length - 1].dataString =
+          lastHistoryDataString;
+      }
     }
 
     // push the rest of the tokens onto history

@@ -30,19 +30,51 @@ export class ConnectionManager {
     this.dataReceiver = null;
     this.onDataReceivedFn = null;
     this.onPeripheralSubscribedFn = null;
+
+    this.heartbeatIntervals = {};
   }
 
   get connectionStatuses() {
     return this._connectionStatuses;
   }
 
-  getPeripheralCharacteristics(peripheralId) {
+  getPeripheralCharacteristic(peripheralId) {
     const status = this._connectionStatuses[peripheralId];
     if (!status || status.status !== PERIPHERAL_STATE_SUBSCRIBED) {
       return null;
     }
 
     return status.characteristic;
+  }
+
+  sendHeartbeat(peripheralId) {
+    const characteristic = this.getPeripheralCharacteristic(peripheralId);
+    if (!characteristic) {
+      return;
+    }
+    // No pending messages, send heartbeat
+    try {
+      characteristic.write(Buffer.from('<hb>;'));
+    } catch (e) {
+      logger.error(`[${peripheralId}] Error sending heartbeat`);
+      logger.error(e);
+    }
+  }
+
+  createPeripheralHeartbeatInterval(peripheralId) {
+    logger.info(`[${peripheralId}] Creating heartbeat interval.`);
+    this.stopPeripheralHeartbeatInterval();
+    this.heartbeatIntervals[peripheralId] = setInterval(() => {
+      this.sendHeartbeat(peripheralId);
+    }, _.get(config, `heartbeat.interval_ms`, 1000));
+  }
+
+  stopPeripheralHeartbeatInterval(peripheralId) {
+    if (this.heartbeatIntervals[peripheralId]) {
+      logger.info(`[${peripheralId}] Stopping heartbeat interval.`);
+      clearInterval(this.heartbeatIntervals[peripheralId]);
+      this.heartbeatIntervals[peripheralId] = null;
+    }
   }
 
   onPeripheralSubscribed(peripheral, characteristic) {
@@ -56,13 +88,13 @@ export class ConnectionManager {
       peripheral,
       characteristic
     });
-    const buffer = Buffer.from('connected');
-    characteristic.write(buffer);
 
     if (this.onPeripheralSubscribedFn) {
       // Callback on peripheral subscribed
       this.onPeripheralSubscribedFn(peripheralId);
     }
+
+    this.createPeripheralHeartbeatInterval(peripheralId);
 
     if (this.connectedPeripheralIds.size < this.targetPeripheralIds.length) {
       // More devices to connect, continue connection.
@@ -90,10 +122,17 @@ export class ConnectionManager {
       }
 
       let characteristic = characteristics[0];
+      if (!characteristic) {
+        logger.error(
+          `[${peripheral.id}] Disconnecting from peripheral due to characteristic not found.`
+        );
+        this.disconnectPeripheral(peripheral);
+        return;
+      }
       logger.info(
         `[${peripheral.id}] Subscribing to characteristics ${characteristic.uuid}`
       );
-      characteristic.on('data', (data, isNotification) => {
+      characteristic.on('data', (bufferData, isNotification) => {
         /*
         logger.info(
           `[${peripheral.id}] Received buffer -> ${util.inspect(data, {
@@ -102,7 +141,7 @@ export class ConnectionManager {
           })} (${data.toString()})`
         );
 */
-        this.onDataReceivedFn(peripheral, data, isNotification);
+        this.onDataReceivedFn(peripheral, bufferData, isNotification);
       });
       characteristic.subscribe((error) => {
         if (error) {
@@ -120,6 +159,37 @@ export class ConnectionManager {
       [characteristicUuid],
       onSvcCharDiscoverCb
     );
+  }
+
+  createSubscriptionTimeout(peripheral) {
+    const peripheralId = peripheral.id;
+    // Clear any previous created timeout.
+    this.clearSubscriptionTimeout(peripheralId);
+
+    // create the timeout.
+    const subscriptionTimeout = setTimeout(async () => {
+      logger.info(
+        `[${peripheralId}] Initiate service and characteristics discovery and subscription.`
+      );
+
+      logger.info(
+        `[${peripheralId}] Discovering services and characteristics...`
+      );
+
+      await this.subscribeToPeripheral(peripheral);
+    }, SUBSCRIPTION_DELAY);
+
+    logger.info(`[${peripheralId}] Timeout for subscription created`);
+    this.subscriptionTimeouts[peripheralId] = subscriptionTimeout;
+  }
+
+  clearSubscriptionTimeout(peripheralId) {
+    // Clear all the subscription timeouts if any
+    if (this.subscriptionTimeouts[peripheralId]) {
+      clearTimeout(this.subscriptionTimeouts[peripheralId]);
+      this.subscriptionTimeouts[peripheralId] = null;
+      logger.warn(`[${peripheralId}] Previous subscription timeout cancelled.`);
+    }
   }
 
   connectPeripheral(peripheral) {
@@ -142,28 +212,11 @@ export class ConnectionManager {
       // Create the timeout that does the subscription on the peripheral
       // Note that this timeout can be cancelled when peripheral
       // disconnects (see disconnectPeripheral())
-      const subscriptionTimeout = setTimeout(async () => {
-        logger.info(
-          `[${peripheralId}] Initiate service and characteristics discovery and subscription.`
-        );
+      this.createSubscriptionTimeout(peripheral);
 
-        logger.info(
-          `[${peripheralId}] Discovering services and characteristics...`
-        );
-
-        await this.subscribeToPeripheral(peripheral);
-      }, SUBSCRIPTION_DELAY);
-
-      logger.info(`[${peripheralId}] Timeout for subscription created`);
-
-      // If there was any existing timeout, clear it before replacing it.
-      if (this.subscriptionTimeouts[peripheralId]) {
-        clearTimeout(this.subscriptionTimeouts[peripheralId]);
-        logger.info(
-          `[${peripheralId}] Previous timeout cancelled before replacement`
-        );
+      if (this.onPeripheralConnectedFn) {
+        this.onPeripheralConnectedFn(peripheral.id);
       }
-      this.subscriptionTimeouts[peripheralId] = subscriptionTimeout;
     };
 
     // Init callback for peripheral disconnected
@@ -172,6 +225,10 @@ export class ConnectionManager {
       this.disconnectPeripheral(peripheral);
       // Fire and forget
       this.restartScanning();
+
+      if (this.onPeripheralDisconnectedFn) {
+        this.onPeripheralDisconnectedFn(peripheral.id);
+      }
     };
 
     peripheral.once('connect', async function () {
@@ -213,13 +270,9 @@ export class ConnectionManager {
     this.subscribedPeripheralIds.delete(peripheralId);
 
     // Clear all the subscription timeouts if any
-    if (this.subscriptionTimeouts[peripheralId]) {
-      clearTimeout(this.subscriptionTimeouts[peripheralId]);
-      this.subscriptionTimeouts[peripheralId] = null;
-      logger.warn(
-        `[${peripheralId}] Previous subscription timeout cancelled due to disconnection.`
-      );
-    }
+    this.clearSubscriptionTimeout(peripheralId);
+
+    this.stopPeripheralHeartbeatInterval(peripheralId);
   }
 
   async onPeripheralDiscovered(peripheral) {
@@ -300,14 +353,14 @@ export class ConnectionManager {
     this.onDataReceivedFn = dataReceiver.onDataReceived.bind(dataReceiver);
     this.onPeripheralSubscribedFn =
       dataReceiver.onPeripheralSubscribed.bind(dataReceiver);
-    this.onPeripheralDisconnected =
+    this.onPeripheralDisconnectedFn =
       dataReceiver.onPeripheralDisconnected.bind(dataReceiver);
-    this.onPeripheralConnected =
+    this.onPeripheralConnectedFn =
       dataReceiver.onPeripheralConnected.bind(dataReceiver);
 
     const onScanStart = () => {
       this.isScanning = true;
-      logger.debug(`Scanning started`);
+      logger.info(`Scanning started`);
     };
     const onScanStop = () => {
       this.isScanning = false;

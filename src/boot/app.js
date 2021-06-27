@@ -5,7 +5,11 @@ import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 
 import { router as indexRouter } from '../routes/index_router';
-import { router as peripheralRouter } from '../routes/peripheral/peripheral_router';
+import { router as peripheralRouter } from '../routes/peripheral_router';
+import { router as cardRouter } from '../routes/card_router';
+import { router as lockRouter } from '../routes/lock_router';
+import { router as rfidRouter } from '../routes/rfid_router';
+import { isValidRequest } from '../lib/auth';
 
 export let app = express();
 
@@ -18,9 +22,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(isValidRequest);
 
 app.use('/', indexRouter);
 app.use('/peripheral', peripheralRouter);
+app.use('/card', cardRouter);
+app.use('/lock', lockRouter);
+app.use('/rfid', rfidRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

@@ -1,32 +1,52 @@
 {
+  "log_level": "trace",
   "connection_manager": {
     "discover": {
       "service_uuid": "ffe0",
       "characteristic_uuid": "ffe1"
     }
   },
+  "engine": {
+    "outbox": {
+      "delimiter": ";",
+      "flush_interval": 100
+    }
+  },
+  "logging": {
+    "flush_interval_ms": 500
+  },
+  "heartbeat": {
+    "interval_ms": 2000
+  },
   "lock": {
+    "timeout": 2000,
     "settings": {
       "main_servo": {
         "frequencies": {
           "unlock": 1800,
           "lock": 1200,
           "idle": 1500
-        }
+        },
+        "end_delay": 200
       },
       "linear_servo": {
         "angles": {
-          "engaged": 82,
-          "disengaged": 50
+          "engaged": 77,
+          "disengaged": 45
         },
-        "step": 4
+        "step": 4,
+        "ms": 10,
+        "end_delay": 1000
       },
       "adxl": {
-        "max_read_count": 5,
+        "max_read_count": 50,
         "angles": {
           "locked": 580,
           "unlocked": 436
         }
+      },
+      "oled": {
+        "debug_display": 1
       }
     }
   }
