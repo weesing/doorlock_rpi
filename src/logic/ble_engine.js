@@ -40,6 +40,7 @@ export class BLEEngine extends DataReceiver {
   toggleLock() {
     const lockSecret = SecretsLoader.loadSecrets()['lockSecret'];
     this._outbox.sendMessage(this.lockMAC, `lock`, lockSecret);
+    this._outbox.sendMessage(this.rfidMAC, `auth`);
   }
 
   rebootLock() {
@@ -235,7 +236,6 @@ export class BLEEngine extends DataReceiver {
                 );
                 if (verified) {
                   this.toggleLock();
-                  this._outbox.sendMessage(this.rfidMAC, `auth`);
                 } else {
                   logger.warn(`Unauthorized key - ${keyValue}`);
                   this._outbox.sendMessage(this.rfidMAC, `unauth`);
