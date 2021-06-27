@@ -82,8 +82,7 @@ export class BLEEngine extends DataReceiver {
         const settingTag = SETTINGS_METADATA[settingName].tag;
         this._outbox.sendMessage(this.lockMAC, settingTag, settingValue);
       }
-    }
-    else if (peripheralId === this.rfidMAC) {
+    } else if (peripheralId === this.rfidMAC) {
       this._outbox.sendMessage(this.rfidMAC, `init`);
     }
   }
@@ -199,7 +198,9 @@ export class BLEEngine extends DataReceiver {
                 break;
               }
               case 'mfrc_failed': {
-                logger.warn(`[${this.rfidMAC}] MFRC (RFID) module failed to communicate. Resetting RFID module`);
+                logger.warn(
+                  `[${this.rfidMAC}] MFRC (RFID) module failed to communicate. Resetting RFID module`
+                );
                 this.rebootRFID();
                 break;
               }
