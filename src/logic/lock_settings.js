@@ -16,6 +16,10 @@ export const SETTINGS_METADATA = {
     config: `lock.settings.main_servo.frequencies.idle`,
     tag: `m_idl`
   },
+  mainServoEndDelay: {
+    config: `lock.settings.main_servo.end_delay`,
+    tag: `m_edel`
+  },
   linearServoEngagedAngle: {
     config: `lock.settings.linear_servo.angles.engaged`,
     tag: `l_en`
@@ -31,6 +35,10 @@ export const SETTINGS_METADATA = {
   linearServoMs: {
     config: `lock.settings.linear_servo.ms`,
     tag: `l_ms`
+  },
+  linearServoEndDelay: {
+    config: `lock.settings.linear_servo.end_delay`,
+    tag: `l_edel`
   },
   adxlReadSampleCount: {
     config: `lock.settings.adxl.max_read_count`,

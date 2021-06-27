@@ -26,7 +26,8 @@
           "unlock": 1800,
           "lock": 1200,
           "idle": 1500
-        }
+        },
+        "end_delay": 200
       },
       "linear_servo": {
         "angles": {
@@ -34,7 +35,8 @@
           "disengaged": 45
         },
         "step": 4,
-        "ms": 10
+        "ms": 10,
+        "end_delay": 1000
       },
       "adxl": {
         "max_read_count": 50,

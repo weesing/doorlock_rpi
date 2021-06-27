@@ -40,10 +40,15 @@ export class BLEEngine extends DataReceiver {
   toggleLock() {
     const lockSecret = SecretsLoader.loadSecrets()['lockSecret'];
     this._outbox.sendMessage(this.lockMAC, `lock`, lockSecret);
+    this._outbox.sendMessage(this.rfidMAC, `auth`);
   }
 
   rebootLock() {
     this._outbox.sendMessage(this.lockMAC, `reboot`);
+  }
+
+  rebootRFID() {
+    this._outbox.sendMessage(this.rfidMAC, `reboot`);
   }
 
   sendData(peripheralId, payload) {
@@ -78,6 +83,8 @@ export class BLEEngine extends DataReceiver {
         const settingTag = SETTINGS_METADATA[settingName].tag;
         this._outbox.sendMessage(this.lockMAC, settingTag, settingValue);
       }
+    } else if (peripheralId === this.rfidMAC) {
+      this._outbox.sendMessage(this.rfidMAC, `init`);
     }
   }
 
@@ -153,29 +160,94 @@ export class BLEEngine extends DataReceiver {
     await super.onDataReceived(peripheral, bufferData, isNotification);
     const peripheralId = peripheral.id;
     if (peripheralId === this.rfidMAC) {
-      const lockCharacteristic =
-        this.connectionManager.connectionStatuses[this.lockMAC].characteristic;
-      if (!lockCharacteristic) {
-        logger.info(`Door lock not connected yet, aborting data sending.`);
-        return;
-      }
+      const dataStringHistory =
+        this.peripheralBuffer[this.rfidMAC].dataStringHistory;
+      for (let i = 0; i < dataStringHistory.length; ++i) {
+        if (!dataStringHistory[i].processed) {
+          const dataString = dataStringHistory[i].dataString;
+          if (!dataString.endsWith('\r\n')) {
+            // Incomplete history, skip
+            continue;
+          }
 
-      const testKey = bufferData.toString('hex');
-      const validKeys = await CardsLogic.getInstance().getKeys();
-      let verified = false;
-      for (const key of validKeys) {
-        if (testKey === key) {
-          verified = true;
-          break;
+          // e.g. <tag>value\r\n OR <tag>\r\n
+          let tempDataString = dataString.replace('\r\n', '');
+
+          // e.g. <tag>value OR <tag>
+          const dataRegex = /^<[0-9a-zA-Z_]+>[0-9]*/g;
+          const matches = tempDataString.match(dataRegex);
+          if (!_.isNil(matches) && matches.length > 0) {
+            let keyValueToken = tempDataString
+              .replace('<', '') // remove first < character
+              .split('>');
+            logger.info(
+              `[${peripheralId}] Received command/data ${keyValueToken}`
+            );
+            if (keyValueToken.length < 1) {
+              continue;
+            }
+            let tag = keyValueToken[0];
+            switch (tag) {
+              case 'req_rfid_data': {
+                logger.info(
+                  `[${peripheralId}] RFID requesting data, nothing to send.`
+                );
+                break;
+              }
+              case 'mfrc_ver': {
+                logger.info(`RFID version found - 0x${keyValueToken[1]}`);
+                break;
+              }
+              case 'mfrc_failed': {
+                logger.warn(
+                  `[${this.rfidMAC}] MFRC (RFID) module failed to communicate. Resetting RFID module`
+                );
+                this.rebootRFID();
+                break;
+              }
+              case 'key': {
+                const lockCharacteristic =
+                  this.connectionManager.connectionStatuses[this.lockMAC]
+                    .characteristic;
+                if (!lockCharacteristic) {
+                  logger.info(
+                    `Door lock not connected yet, aborting data sending.`
+                  );
+                  return;
+                }
+                if (keyValueToken.length !== 2) {
+                  continue;
+                }
+                let keyValue = keyValueToken[1].toLowerCase();
+                const validKeys = await CardsLogic.getInstance().getKeys();
+                let verified = false;
+                for (const key of validKeys) {
+                  if (keyValue === key) {
+                    verified = true;
+                    break;
+                  }
+                }
+                logger.info(
+                  `${
+                    verified
+                      ? 'Authorized! Sending lock toggle'
+                      : 'Unauthorized'
+                  }`
+                );
+                if (verified) {
+                  this.toggleLock();
+                } else {
+                  logger.warn(`Unauthorized key - ${keyValue}`);
+                  this._outbox.sendMessage(this.rfidMAC, `unauth`);
+                }
+                break;
+              }
+            }
+          }
+          this.peripheralBuffer[this.rfidMAC].dataStringHistory[
+            i
+          ].processed = true;
         }
-      }
-      logger.info(
-        `${verified ? 'Authorized! Sending lock toggle' : 'Unauthorized'}`
-      );
-      if (verified) {
-        this.toggleLock();
-      } else {
-        logger.warn(`Unauthorized key - ${testKey}`);
       }
     } else if (peripheralId === this.lockMAC) {
       const dataStringHistory =
