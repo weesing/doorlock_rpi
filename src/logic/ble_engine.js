@@ -37,10 +37,13 @@ export class BLEEngine extends DataReceiver {
     return this._connectionManager;
   }
 
-  toggleLock() {
-    const lockSecret = SecretsLoader.loadSecrets()['lockSecret'];
-    this._outbox.sendMessage(this.lockMAC, `lock`, lockSecret);
-    this._outbox.sendMessage(this.rfidMAC, `auth`);
+  async toggleLock() {
+    return new Promise((resolve) => {
+      this.commandPromiseResolves['toggle_lock'] = resolve;
+      const lockSecret = SecretsLoader.loadSecrets()['lockSecret'];
+      this._outbox.sendMessage(this.lockMAC, `lock`, lockSecret);
+      this._outbox.sendMessage(this.rfidMAC, `auth`);
+    });
   }
 
   rebootLock() {
@@ -115,6 +118,16 @@ export class BLEEngine extends DataReceiver {
         const settingName = settingNames[i];
         result[settingName] = values[i];
       }
+      return result;
+    });
+  }
+
+  async getLockStatus() {
+    return new Promise((resolve) => {
+      this.commandPromiseResolves['status'] = resolve;
+      this._outbox.sendMessage(this.lockMAC, `status`);
+    }).then((result) => {
+      logger.info(`Retrieved lock status ${result}`);
       return result;
     });
   }
@@ -235,7 +248,7 @@ export class BLEEngine extends DataReceiver {
                   }`
                 );
                 if (verified) {
-                  this.toggleLock();
+                  await this.toggleLock();
                 } else {
                   logger.warn(`Unauthorized key - ${keyValue}`);
                   this._outbox.sendMessage(this.rfidMAC, `unauth`);
@@ -283,6 +296,27 @@ export class BLEEngine extends DataReceiver {
                   `[${peripheralId}] Lock is requesting initial settings data, sending now.`
                 );
                 this.sendPeripheralSettings();
+                break;
+              }
+              case 'status': {
+                if (keyValueToken.length !== 2) {
+                  continue;
+                }
+                let lockStatus = parseInt(keyValueToken[1]);
+                if (this.commandPromiseResolves['toggle_lock']) {
+                  logger.info(
+                    `Resolving toggle lock command result - ${lockStatus}`
+                  );
+                  this.commandPromiseResolves['toggle_lock'](lockStatus);
+                  this.commandPromiseResolves['toggle_lock'] = null;
+                }
+                if (this.commandPromiseResolves['status']) {
+                  logger.info(
+                    `Resolving status command result - ${lockStatus}`
+                  );
+                  this.commandPromiseResolves['status'](lockStatus);
+                  this.commandPromiseResolves['status'] = null;
+                }
                 break;
               }
               default: {
