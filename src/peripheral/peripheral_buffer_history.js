@@ -1,11 +1,16 @@
 import { v4 as uuidv4 } from 'uuid';
 
+export const PROCESS_STATE_UNPROCESSED = 'unprocessed';
+export const PROCESS_STATE_PROCESSING = 'processing';
+export const PROCESS_STATE_PROCESSED = 'processed';
+export const PROCESS_STATE_FAILED = 'failed';
+
 export class PeripheralBufferHistory {
   constructor({ dataString = '', logged = false } = {}) {
     this._id = uuidv4();
     this._dataString = dataString;
     this._logged = logged;
-    this._processed = false;
+    this._processState = PROCESS_STATE_UNPROCESSED;
   }
 
   get id() {
@@ -20,12 +25,12 @@ export class PeripheralBufferHistory {
     this._logged = logged;
   }
 
-  get processed() {
-    return this._processed;
+  get processState() {
+    return this._processState;
   }
 
-  set processed(processed) {
-    this._processed = processed;
+  set processState(processState) {
+    this._processState = processState;
   }
 
   get dataString() {
