@@ -79,7 +79,7 @@ export class DataReceiver {
 
   async onPeripheralDisconnected(peripheralId) {}
 
-  async onDataReceived(peripheral, bufferData, isNotification) {
+  onDataReceived(peripheral, bufferData, isNotification) {
     const peripheralId = peripheral.id;
     if (this.peripheralBuffer[peripheralId]) {
       this.peripheralBuffer[peripheralId].appendBuffer(bufferData);
