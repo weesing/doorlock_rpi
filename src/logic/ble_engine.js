@@ -310,7 +310,7 @@ export class BLEEngine extends DataReceiver {
                   this.commandPromiseResolves['toggle_lock'](lockStatus);
                   this.commandPromiseResolves['toggle_lock'] = null;
                 }
-                if (!this.commandPromiseResolves['status']) {
+                if (this.commandPromiseResolves['status']) {
                   logger.info(
                     `Resolving status command result - ${lockStatus}`
                   );
