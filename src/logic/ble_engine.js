@@ -16,7 +16,7 @@ export class BLEEngine extends DataReceiver {
 
     this._initialPeripheralSyncTimeout = {};
     this.commandPromiseResolves = {};
-    
+
     this.flushDataReceivedInterval = null;
     this.dataReceivedQueue = [];
   }
@@ -173,7 +173,7 @@ export class BLEEngine extends DataReceiver {
   }
 
   onDataReceived(peripheral, bufferData, isNotification) {
-    await super.onDataReceived(peripheral, bufferData, isNotification);
+    super.onDataReceived(peripheral, bufferData, isNotification);
     this.dataReceivedQueue.push({ peripheral, bufferData, isNotification });
   }
 
