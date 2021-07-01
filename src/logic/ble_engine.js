@@ -169,7 +169,7 @@ export class BLEEngine extends DataReceiver {
     this.clearInitialSyncTimeout(peripheralId);
   }
 
-  async onDataReceived({ peripheral, bufferData, isNotification }) {
+  async onDataReceived(peripheral, bufferData, isNotification) {
     super.onDataReceived(peripheral, bufferData, isNotification);
     const peripheralId = peripheral.id;
     if (peripheralId === this.rfidMAC) {
