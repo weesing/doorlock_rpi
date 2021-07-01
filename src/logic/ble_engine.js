@@ -16,6 +16,9 @@ export class BLEEngine extends DataReceiver {
 
     this._initialPeripheralSyncTimeout = {};
     this.commandPromiseResolves = {};
+    
+    this.flushDataReceivedInterval = null;
+    this.dataReceivedQueue = [];
   }
 
   // Overwrite
@@ -169,8 +172,12 @@ export class BLEEngine extends DataReceiver {
     this.clearInitialSyncTimeout(peripheralId);
   }
 
-  async onDataReceived(peripheral, bufferData, isNotification) {
+  onDataReceived(peripheral, bufferData, isNotification) {
     await super.onDataReceived(peripheral, bufferData, isNotification);
+    this.dataReceivedQueue.push({ peripheral, bufferData, isNotification });
+  }
+
+  async processDataReceived({ peripheral, bufferData, isNotification }) {
     const peripheralId = peripheral.id;
     if (peripheralId === this.rfidMAC) {
       const dataStringHistory =
@@ -350,6 +357,13 @@ export class BLEEngine extends DataReceiver {
     this._connectionManager.startConnections(dataReceiver);
 
     this._outbox = new Outbox(this.peripheralIds, this._connectionManager);
+    if (this.flushDataReceivedInterval) {
+      clearInterval(this.flushDataReceivedInterval);
+    }
+    this.flushDataReceivedInterval = setInterval(async () => {
+      const data = this.dataReceivedQueue.shift();
+      await this.processDataReceived(data);
+    }, 100);
   }
 
   static getInstance() {
