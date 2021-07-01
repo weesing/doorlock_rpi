@@ -362,7 +362,9 @@ export class BLEEngine extends DataReceiver {
     }
     this.flushDataReceivedInterval = setInterval(async () => {
       const data = this.dataReceivedQueue.shift();
-      await this.processDataReceived(data);
+      if (data) {
+        await this.processDataReceived(data);
+      }
     }, 100);
   }
 
