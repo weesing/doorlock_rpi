@@ -248,7 +248,7 @@ export class BLEEngine extends DataReceiver {
                   }`
                 );
                 if (verified) {
-                  await this.toggleLock();
+                  this.toggleLock();
                 } else {
                   logger.warn(`Unauthorized key - ${keyValue}`);
                   this._outbox.sendMessage(this.rfidMAC, `unauth`);
