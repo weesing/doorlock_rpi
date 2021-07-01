@@ -2,6 +2,12 @@ import _ from 'lodash';
 import config from '../lib/config';
 import logger from '../lib/logger';
 import { SecretsLoader } from '../lib/secrets_loader';
+import {
+  PROCESS_STATE_FAILED,
+  PROCESS_STATE_PROCESSED,
+  PROCESS_STATE_PROCESSING,
+  PROCESS_STATE_UNPROCESSED
+} from '../peripheral/peripheral_buffer_history';
 import { CardsLogic } from './cards';
 import { ConnectionManager } from './connection_manager';
 import { DataReceiver } from './data_receiver';
@@ -176,10 +182,16 @@ export class BLEEngine extends DataReceiver {
       const dataStringHistory =
         this.peripheralBuffer[this.rfidMAC].dataStringHistory;
       for (let i = 0; i < dataStringHistory.length; ++i) {
-        if (!dataStringHistory[i].processed) {
+        if (dataStringHistory[i].processState === PROCESS_STATE_UNPROCESSED) {
+          this.peripheralBuffer[this.rfidMAC].dataStringHistory[
+            i
+          ].processState = PROCESS_STATE_PROCESSING;
           const dataString = dataStringHistory[i].dataString;
           if (!dataString.endsWith('\r\n')) {
             // Incomplete history, skip
+            this.peripheralBuffer[this.rfidMAC].dataStringHistory[
+              i
+            ].processState = PROCESS_STATE_UNPROCESSED;
             continue;
           }
 
@@ -197,6 +209,9 @@ export class BLEEngine extends DataReceiver {
               `[${peripheralId}] Received command/data ${keyValueToken}`
             );
             if (keyValueToken.length < 1) {
+              this.peripheralBuffer[this.rfidMAC].dataStringHistory[
+                i
+              ].processState = PROCESS_STATE_FAILED;
               continue;
             }
             let tag = keyValueToken[0];
@@ -226,9 +241,15 @@ export class BLEEngine extends DataReceiver {
                   logger.info(
                     `Door lock not connected yet, aborting data sending.`
                   );
+                  this.peripheralBuffer[this.rfidMAC].dataStringHistory[
+                    i
+                  ].processState = PROCESS_STATE_FAILED;
                   return;
                 }
                 if (keyValueToken.length !== 2) {
+                  this.peripheralBuffer[this.rfidMAC].dataStringHistory[
+                    i
+                  ].processState = PROCESS_STATE_FAILED;
                   continue;
                 }
                 let keyValue = keyValueToken[1].toLowerCase();
@@ -248,7 +269,7 @@ export class BLEEngine extends DataReceiver {
                   }`
                 );
                 if (verified) {
-                  this.toggleLock();
+                  await this.toggleLock();
                 } else {
                   logger.warn(`Unauthorized key - ${keyValue}`);
                   this._outbox.sendMessage(this.rfidMAC, `unauth`);
@@ -259,17 +280,23 @@ export class BLEEngine extends DataReceiver {
           }
           this.peripheralBuffer[this.rfidMAC].dataStringHistory[
             i
-          ].processed = true;
+          ].processState = PROCESS_STATE_PROCESSED;
         }
       }
     } else if (peripheralId === this.lockMAC) {
       const dataStringHistory =
         this.peripheralBuffer[this.lockMAC].dataStringHistory;
       for (let i = 0; i < dataStringHistory.length; ++i) {
-        if (!dataStringHistory[i].processed) {
+        if (dataStringHistory[i].processState === PROCESS_STATE_UNPROCESSED) {
+          this.peripheralBuffer[this.lockMAC].dataStringHistory[
+            i
+          ].processState = PROCESS_STATE_PROCESSING;
           const dataString = dataStringHistory[i].dataString;
           if (!dataString.endsWith('\r\n')) {
             // Incomplete history, skip
+            this.peripheralBuffer[this.lockMAC].dataStringHistory[
+              i
+            ].processState = PROCESS_STATE_UNPROCESSED;
             continue;
           }
 
@@ -287,6 +314,9 @@ export class BLEEngine extends DataReceiver {
               `[${peripheralId}] Received command/data ${keyValueToken}`
             );
             if (keyValueToken.length < 1) {
+              this.peripheralBuffer[this.lockMAC].dataStringHistory[
+                i
+              ].processState = PROCESS_STATE_FAILED;
               continue;
             }
             let tag = keyValueToken[0];
@@ -300,6 +330,9 @@ export class BLEEngine extends DataReceiver {
               }
               case 'status': {
                 if (keyValueToken.length !== 2) {
+                  this.peripheralBuffer[this.lockMAC].dataStringHistory[
+                    i
+                  ].processState = PROCESS_STATE_FAILED;
                   continue;
                 }
                 let lockStatus = parseInt(keyValueToken[1]);
@@ -322,6 +355,9 @@ export class BLEEngine extends DataReceiver {
               default: {
                 // lock is trying to send back the requested setting value. e.g. <m_xlk>1800\r\n
                 if (keyValueToken.length !== 2) {
+                  this.peripheralBuffer[this.lockMAC].dataStringHistory[
+                    i
+                  ].processState = PROCESS_STATE_FAILED;
                   continue;
                 }
                 let settingValue = parseInt(keyValueToken[1]);
@@ -336,7 +372,7 @@ export class BLEEngine extends DataReceiver {
           }
           this.peripheralBuffer[this.lockMAC].dataStringHistory[
             i
-          ].processed = true;
+          ].processState = PROCESS_STATE_PROCESSED;
         }
       }
     }
