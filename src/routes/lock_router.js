@@ -4,9 +4,23 @@ import { StaticGlobals } from '../lib/static_globals';
 export let router = express.Router();
 
 router.post('/', async (req, res, next) => {
-  StaticGlobals.getInstance().getVar('ble_engine').toggleLock();
-  res.status(202);
-  res.send();
+  const lockStatus = await StaticGlobals.getInstance()
+    .getVar('ble_engine')
+    .toggleLock();
+
+  res.jsonp({
+    status: lockStatus ? 'locked' : 'unlocked'
+  });
+});
+
+router.get('/status', async (req, res, next) => {
+  const lockStatus = await StaticGlobals.getInstance()
+    .getVar('ble_engine')
+    .getLockStatus();
+
+  res.jsonp({
+    status: lockStatus ? 'locked' : 'unlocked'
+  });
 });
 
 router.get('/settings', async (req, res, next) => {
