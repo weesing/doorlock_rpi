@@ -16,7 +16,7 @@
     "flush_interval_ms": 500
   },
   "heartbeat": {
-    "interval_ms": 2000
+    "interval_ms": 5000
   },
   "lock": {
     "timeout": 2000,

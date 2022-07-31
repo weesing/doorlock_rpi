@@ -54,6 +54,7 @@ export class ConnectionManager {
     }
     // No pending messages, send heartbeat
     try {
+      logger.info(`Sending heartbeat to ${peripheralId}`);
       characteristic.write(Buffer.from('<hb>;'));
     } catch (e) {
       logger.error(`[${peripheralId}] Error sending heartbeat`);
@@ -65,7 +66,7 @@ export class ConnectionManager {
     logger.info(`[${peripheralId}] Creating heartbeat interval.`);
     this.stopPeripheralHeartbeatInterval();
     this.heartbeatIntervals[peripheralId] = setInterval(() => {
-      this.sendHeartbeat(peripheralId);
+      //this.sendHeartbeat(peripheralId);
     }, _.get(config, `heartbeat.interval_ms`, 1000));
   }
 
