@@ -63,7 +63,7 @@ export class ConnectionManager {
 
   createPeripheralHeartbeatInterval(peripheralId) {
     logger.info(`[${peripheralId}] Creating heartbeat interval.`);
-    this.stopPeripheralHeartbeatInterval();
+    this.stopPeripheralHeartbeatInterval(peripheralId);
     this.heartbeatIntervals[peripheralId] = setInterval(() => {
       this.sendHeartbeat(peripheralId);
     }, _.get(config, `heartbeat.interval_ms`, 1000));

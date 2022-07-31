@@ -369,6 +369,8 @@ export class BLEEngine extends DataReceiver {
                 break;
               }
             }
+          } else {
+            // Not a command
           }
           this.peripheralBuffer[this.lockMAC].dataStringHistory[
             i
