@@ -35,8 +35,6 @@ export class BLEEngine extends DataReceiver {
     this.lockMAC = secrets.lockMAC.toLowerCase();
 
     this.peripheralIds = [this.rfidMAC, this.lockMAC];
-
-    this.meMAC = secrets.nodeMAC.toLowerCase();
   }
 
   get connectionManager() {
