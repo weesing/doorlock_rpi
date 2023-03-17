@@ -1,6 +1,6 @@
 import util from 'util';
 import _ from 'lodash';
-import noble from 'noble';
+import noble from '@abandonware/noble';
 import logger from '../lib/logger';
 import config from '../lib/config';
 
